@@ -63,7 +63,7 @@ element :=
 loop, Parse, qstrg, CSV
 {
     sql := "Select * from stats where requester_id = '" . A_LoopField . "';" 
-    DB.GetTable(sql, Result)
+    db.GetTable(sql, Result)
     if (Result.Rows[1, 1])
         element .=  """" . Result.Rows[1, 1] . """" . ":{""name"":" . """" . Result.Rows[1, 2] . """" . ",""attrs"":{""comm"":" . """" . Format("{1:0.2f}", Result.Rows[1, 6]) . """" . ",""pay"":" . """" . Format("{1:0.2f}", Result.Rows[1, 5]) . """" . ",""fair"":" . """" . Format("{1:0.2f}", Result.Rows[1, 3]) . """" . ",""fast"":" . """" . Format("{1:0.2f}", Result.Rows[1, 4]) . """" . "},""reviews"":" . Result.Rows[1, 8] . ",""tos_flags"":" . Result.Rows[1, 7] . "},"
     else
