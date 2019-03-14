@@ -2,7 +2,6 @@
 #SingleInstance force
 SetWorkingDir, %A_ScriptDir%
 SetBatchLines, -1
-
 db := new SQLiteDB
 DBLoc := "C:\TOdb\todbmanager-0.3\to.db" ; Change to match the location of your database as needed
 DBAccess := "R" ; Open db Readonly
