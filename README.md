@@ -15,3 +15,10 @@ Need to install the following in A_ScriptDir:
  2.) Class_SQLiteDB - https://github.com/AHK-just-me/Class_SQLiteDB
  
  3.) AHKhttp - https://github.com/zhamlin/AHKhttp
+
+
+Edit the SQLHTTP.ahk file.
+
+  Change the line to the location name of your to.db database file:
+
+DBLoc := "C:\TO_DB\todbmanager-0.3\to.db" ; Change to match the location name of your database as needed
