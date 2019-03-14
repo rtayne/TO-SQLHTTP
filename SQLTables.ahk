@@ -10,6 +10,7 @@ db.OpenDB(DBLoc, DBAccess)
 
 TableLookup := "select name from sqlite_master where type='table';" ; This will produce a list of all tables in the Database
 DB.GetTable(TableLookup, Result)
+db.CloseDB()
 loop % Result.RowCount
 {
 I := a_index ; Set the row value for each row loop
@@ -18,7 +19,6 @@ I := a_index ; Set the row value for each row loop
           msgbox % "Table Name: " . Result.Rows[I, a_index] ; show the name of each table in the database
           }
 }
-db.CloseDB()
 
 exitApp
 
