@@ -30,10 +30,11 @@ An AutoHotkey script for an SQLite api / HTTP Server front end access to a TO Da
 
         http://127.0.0.1:8000/api/multi-attrs.php?ids=requesterid
 
+
 #######################################################
 
 
-There is an addional SQLTables.ahk script to list all the names of the SQLite tables in to.db
+SQLTables.ahk script to list all the names of the SQLite tables in to.db
 
 * Edit the SQLTables.ahk file.
 
