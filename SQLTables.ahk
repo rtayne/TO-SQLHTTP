@@ -13,10 +13,10 @@ db.GetTable(TableLookup, Result)
 db.CloseDB()
 loop % Result.RowCount
 {
-I := a_index ; Set the row value for each row loop
-     loop % Result.ColumnCount
+I := A_Index ; Set the row value for each row loop
+     Loop % Result.ColumnCount
           {
-          msgbox % "Table Name: " . Result.Rows[I, a_index] ; show the name of each table in the database
+          msgbox % "Table Name: " . Result.Rows[I, A_Index] ; show the name of each table in the database
           }
 }
 
