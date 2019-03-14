@@ -28,7 +28,7 @@ An AutoHotkey script for an SQLite api / HTTP Server front end access to a TO Da
 
 * Run the SQLHTTP.ahk script and the api server will be located at the following URL:
 
-        http://127.0.0.1:8000/api/multi-attrs.php?ids={requesterid},{requesterid}
+        http://127.0.0.1:8000/api/multi-attrs.php?ids=requesterid
 
 #######################################################
 
