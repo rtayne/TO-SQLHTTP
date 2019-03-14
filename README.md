@@ -6,7 +6,7 @@ An AutoHotkey script for an SQLite api / HTTP Server front end access to a TO Da
 #######################################################
 
 
-* You need to install AHKsock in an AHK Lib for example Documents\AutoHotkey\Lib:
+* You need to install AHKsock in an AHK Lib (for example Documents\AutoHotkey\Lib):
   
     1.) AHKsock - https://github.com/jleb/AHKsock
 
