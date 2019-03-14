@@ -1,7 +1,7 @@
 # TO-SQLHTTP-Server
 An AutoHotkey script using an SQLite api / HTTP Server front end.
 
-* Used to locally accesss a TO Database generated from toutils/todbmanger:
+* Used to accesss locally a TO Database generated from toutils/todbmanger:
   
   todbmanager - https://github.com/toutils/todbmanager
 
