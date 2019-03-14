@@ -7,7 +7,6 @@ db := new SQLiteDB
 DBLoc := "C:\TOdb\todbmanager-0.3\to.db" ; Change to match the location of your database as needed
 DBAccess := "R" ; Open db Readonly
 db.OpenDB(DBLoc, DBAccess)
-
 TableLookup := "select name from sqlite_master where type='table';" ; This will produce a list of all tables in the Database
 db.GetTable(TableLookup, Result)
 db.CloseDB()
