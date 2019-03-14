@@ -1,6 +1,9 @@
 # TO-SQLHTTP-Server
-An HTTP api server for the stats table in to.db
+An AutoHotkey scrip - SQLite api / HTTP Server front end for a TO Database generated from toutils/todbmanger:
+  
+  todbmanager - https://github.com/toutils/todbmanager
 
+#######################################################
 
 
 * You need to install AHKsock in AHK Lib:
