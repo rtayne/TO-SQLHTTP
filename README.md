@@ -11,7 +11,7 @@ An AutoHotkey script for an SQLite api / HTTP Server front end access to a TO Da
     1.) AHKsock - https://github.com/jleb/AHKsock
 
 
-* You need to download and unzip the following into the Script Working Directory; (A_ScriptDir):
+* You need to download and unzip the following into the Script Working Directory (A_ScriptDir):
  
     1.) sqlite-dll-{arch-version}.zip - https://sqlite.org/download.html
  
