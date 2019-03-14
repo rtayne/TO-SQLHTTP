@@ -22,3 +22,8 @@ Edit the SQLHTTP.ahk file.
   Change the line to the location name of your to.db database file:
 
 DBLoc := "C:\TO_DB\todbmanager-0.3\to.db" ; Change to match the location name of your database as needed
+
+Run the SQLHTTP.ahk script. If you change nothing else in the SQLHTTP.ahk file, your api server will be at:
+
+http://127.0.0.1:8000/api/multi-attrs.php?ids={requesterid},{requesterid}
+
