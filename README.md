@@ -1,14 +1,14 @@
 # TO-SQLHTTP-Server
-An api for reading stats table from to.db
+An HTTP api server for the stats table in to.db
 
-http://127.0.0.1:8000/api/multi-attrs.php?ids=?{requesterid}
+
 
 Need to install AHKsock in AHK Lib:
   
   AHKsock - https://github.com/jleb/AHKsock
 
 
-Need to install the following in A_ScriptDir:
+Need to install in A_ScriptDir:
  
  1.) sqlite-dll-{arch-version}.zip - https://sqlite.org/download.html
  
@@ -27,3 +27,5 @@ Run the SQLHTTP.ahk script. If you change nothing else in the SQLHTTP.ahk file, 
 
 http://127.0.0.1:8000/api/multi-attrs.php?ids={requesterid},{requesterid}
 
+####
+There is an included SQLTables script to list the names of the tables in to.db
