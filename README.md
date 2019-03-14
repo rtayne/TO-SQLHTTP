@@ -13,7 +13,7 @@ An AutoHotkey script for an SQLite api / HTTP Server front end access to a TO Da
 
 * You need to download and unzip the following into the Script Working Directory (A_ScriptDir):
  
-    1.) sqlite-dll-{arch-version}.zip - https://sqlite.org/download.html
+    1.) sqlite-dll-{arch-version}.zip - Precompiled Binaries for Windows - https://sqlite.org/download.html
  
     2.) Class_SQLiteDB - https://github.com/AHK-just-me/Class_SQLiteDB
  
