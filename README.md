@@ -13,6 +13,8 @@ An AutoHotkey script using an SQLite api / HTTP Server front end.
     1.) AHKsock - https://github.com/jleb/AHKsock
 
 
+
+
 * You need to download and unzip the following into the Script Working Directory (A_ScriptDir):
  
     1.) sqlite-dll-{arch-version}.zip - Precompiled Binaries for Windows - https://sqlite.org/download.html
@@ -22,11 +24,15 @@ An AutoHotkey script using an SQLite api / HTTP Server front end.
     3.) AHKhttp - https://github.com/zhamlin/AHKhttp
 
 
+
+
 * Edit the SQLHTTP.ahk file.
 
     1.) Change the DBLoc line to the location of your to.db database file:
 
         DBLoc := "C:\TO_DB\todbmanager-0.3\to.db" ; Change to match the location name of your database as needed
+
+
 
 * Run the SQLHTTP.ahk script and the api server will be located at the following URL:
 
