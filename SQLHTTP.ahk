@@ -50,9 +50,9 @@ getHTML() {
 
 handleApi(ByRef req, ByRef res, server) {
     global qstrg, body
+    res.headers["Access-Control-Allow-Origin"] := "*"
     qstrg := req.queries["ids"] ; Enumerate the Query String Parameters
     Gosub getsql
-    res.headers["Access-Control-Allow-Origin"] := "*"
     res.status := 200
     res.SetBodyText(body)
 }
