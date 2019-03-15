@@ -1,12 +1,12 @@
 # TO-SQLHTTP-Server
-An AutoHotkey script with an SQLite / HTTP Server front end for api acesses to a to.db from toutils/todbmanger:
+An AutoHotkey script with an SQLite / HTTP Server front end for access to a to.db from toutils/todbmanger:
   
   todbmanager - https://github.com/toutils/todbmanager
 
 #######################################################
 
 
-* You need to download, unzip, and install AHKsock.ahk in an AHK Standard Lib or User Library (Documents\AutoHotkey\Lib):
+* You need to download, unzip, and install AHKsock.ahk in an AHK Standard Lib or AHK User Library (Documents\AutoHotkey\Lib):
   
     1.) AHKsock - https://github.com/jleb/AHKsock
 
