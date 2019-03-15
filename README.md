@@ -2,7 +2,7 @@
 An AutoHotkey script with an SQLite / HTTP Server.
 
 
-* Provides HTTP access to the stats Table from a to.db generated from toutils/todbmanger:
+* Provides HTTP access to the stats Table from a to.db from toutils/todbmanger:
 
 
       todbmanager - https://github.com/toutils/todbmanager
