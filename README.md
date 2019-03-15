@@ -50,7 +50,7 @@ Installation:
 #######################################################
 
 
-SQLTables.ahk - A script to list the names of the SQL tables in a to.db
+SQLTables.ahk - A script to display the names of the SQL tables in a to.db
 
 * Edit the SQLTables.ahk file and change the DBLoc to the location of your to.db database file:
 
