@@ -23,10 +23,12 @@ Installation:
 
 
 * Download and unzip into the SQLHTTP.ahk Script Working Directory (A_ScriptDir):
- 
+
+
+      AHKhttp - https://github.com/zhamlin/AHKhttp
+
       Class_SQLiteDB - https://github.com/AHK-just-me/Class_SQLiteDB
  
-      AHKhttp - https://github.com/zhamlin/AHKhttp
 
       Precompiled Binaries for Windows:
       
