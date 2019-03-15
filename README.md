@@ -7,6 +7,10 @@ TOSQLHTTP.ahk - An AutoHotkey script with an SQLite HTTP Server.
 
       todbmanager - https://github.com/toutils/todbmanager
 
+* Mimics the output from:
+
+      https://turkopticon.ucsd.edu/api/multi-attrs.php?ids=requesterid
+
 
 ##############################################################################################################
 
