@@ -22,7 +22,7 @@ Installation:
 
 
 
-* Download and unzip into the SQLHTTP.ahk directory (Script Working Directory):
+* Download and unzip into the SQLHTTP.ahk script directory:
 
 
       AHKhttp - https://github.com/zhamlin/AHKhttp
