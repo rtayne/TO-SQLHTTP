@@ -1,5 +1,5 @@
 # TO-SQLHTTP-Server
-An AutoHotkey script with an SQLite HTTP Server.
+SQLHTTP.ahk - An AutoHotkey script with an SQLite HTTP Server.
 
 
 * Provides HTTP access to the stats Table from a to.db from toutils/todbmanger:
