@@ -29,7 +29,6 @@ Installation:
 
       Class_SQLiteDB - https://github.com/AHK-just-me/Class_SQLiteDB
  
-
       Precompiled Binaries for Windows:
       
             sqlite-dll-{arch-version}.zip - https://sqlite.org/download.html
