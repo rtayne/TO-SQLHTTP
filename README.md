@@ -44,7 +44,7 @@ Installation:
 
 
 
-* Run the SQLHTTP.ahk script and the api server will be located at URL:
+* Run the SQLHTTP.ahk script and the HTTP server will be located at URL:
 
         http://127.0.0.1:8000/api/multi-attrs.php?ids=requesterid
 
