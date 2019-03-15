@@ -36,9 +36,7 @@ Installation:
       
 
 
-* Edit the SQLHTTP.ahk file.
-
-    Change the DBLoc to the location of your to.db database file:
+* Edit the SQLHTTP.ahk file and change the DBLoc to the location of your to.db database file:
 
         DBLoc := "C:\TO_DB\todbmanager-0.3\to.db" ; Change to match the location name of your database as needed
 
@@ -54,8 +52,6 @@ Installation:
 
 SQLTables.ahk - A script to list the names of the SQL tables in a to.db
 
-* Edit the SQLTables.ahk file.
-
-    Change the DBLoc to the location of your to.db database file:
+* Edit the SQLTables.ahk file and change the DBLoc to the location of your to.db database file:
 
         DBLoc := "C:\TO_DB\todbmanager-0.3\to.db" ; Change to match the location name of your database as needed
