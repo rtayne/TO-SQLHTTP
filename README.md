@@ -16,7 +16,7 @@ Installation:
 
 
 
-* Download and unzip the following into the SQLHTTP.ahk Script Working Directory (A_ScriptDir):
+* Download and unzip into the SQLHTTP.ahk Script Working Directory (A_ScriptDir):
  
     1.) sqlite-dll-{arch-version}.zip - Precompiled Binaries for Windows - https://sqlite.org/download.html
  
