@@ -6,14 +6,17 @@ An AutoHotkey script with an SQLite / HTTP Server front end. Provides HTTP stats
 #######################################################
 
 
-* You need to download, unzip, and install AHKsock.ahk in an AHK Standard Lib or AHK User Library (Documents\AutoHotkey\Lib):
+Installation:
+
+
+* Download, unzip, and install AHKsock.ahk in an AHK Standard Lib or AHK User Library (Documents\AutoHotkey\Lib):
   
     1.) AHKsock - https://github.com/jleb/AHKsock
 
 
 
 
-* You need to download and unzip the following into the SQLHTTP.ahk Script Working Directory (A_ScriptDir):
+* Download and unzip the following into the SQLHTTP.ahk Script Working Directory (A_ScriptDir):
  
     1.) sqlite-dll-{arch-version}.zip - Precompiled Binaries for Windows - https://sqlite.org/download.html
  
