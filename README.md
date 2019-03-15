@@ -26,7 +26,7 @@ Installation:
  
       Precompiled Binaries for Windows:
       
-      sqlite-dll-{arch-version}.zip - https://sqlite.org/download.html
+            sqlite-dll-{arch-version}.zip - https://sqlite.org/download.html
  
       Class_SQLiteDB - https://github.com/AHK-just-me/Class_SQLiteDB
  
