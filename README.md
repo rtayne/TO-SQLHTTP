@@ -1,5 +1,5 @@
 # TO-SQLHTTP-Server
-SQLHTTP.ahk - An AutoHotkey script with an SQLite HTTP Server.
+TOSQLHTTP.ahk - An AutoHotkey script with an SQLite HTTP Server.
 
 
 * Provides HTTP access to the stats Table for a to.db from toutils/todbmanger:
@@ -22,7 +22,7 @@ Installation:
 
 
 
-* Download and unzip into the SQLHTTP.ahk script directory:
+* Download and unzip into the TOSQLHTTP.ahk script directory:
 
 
       AHKhttp - https://github.com/zhamlin/AHKhttp
@@ -36,13 +36,13 @@ Installation:
       
 
 
-* Edit the SQLHTTP.ahk file and change the DBLoc to the location of your to.db database file:
+* Edit the TOSQLHTTP.ahk file and change the DBLoc to the location of your to.db database file:
 
         DBLoc := "C:\TO_DB\todbmanager-0.3\to.db" ; Change to match the location name of your database as needed
 
 
 
-* Run the SQLHTTP.ahk script and the HTTP server will be located at URL:
+* Run the TOSQLHTTP.ahk script and the HTTP server will be located at URL:
 
         http://127.0.0.1:8000/api/multi-attrs.php?ids=requesterid
 
@@ -50,8 +50,8 @@ Installation:
 #######################################################
 
 
-SQLTables.ahk - A script to display the names of the SQL tables in a to.db
+TOSQLTables.ahk - A script to display the names of the SQL tables in a to.db
 
-* Edit the SQLTables.ahk file and change the DBLoc to the location of your to.db database file:
+* Edit the TOSQLTables.ahk file and change the DBLoc to the location of your to.db database file:
 
         DBLoc := "C:\TO_DB\todbmanager-0.3\to.db" ; Change to match the location name of your database as needed
