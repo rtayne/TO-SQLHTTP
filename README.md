@@ -40,7 +40,7 @@ An AutoHotkey script with an SQLite / HTTP Server front end for access to a to.d
 #######################################################
 
 
-SQLTables.ahk script to list all the names of the SQLite tables in to.db
+SQLTables.ahk - A script to list the names of the SQL tables in a to.db
 
 * Edit the SQLTables.ahk file.
 
