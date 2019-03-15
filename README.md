@@ -16,25 +16,26 @@ Installation:
 
 * Download, unzip, and install AHKsock.ahk in an AHK Standard Lib or AHK User Library (Documents\AutoHotkey\Lib):
   
-    1.) AHKsock - https://github.com/jleb/AHKsock
+  
+      AHKsock - https://github.com/jleb/AHKsock
 
 
 
 
 * Download and unzip into the SQLHTTP.ahk Script Working Directory (A_ScriptDir):
  
-    1.) sqlite-dll-{arch-version}.zip - Precompiled Binaries for Windows - https://sqlite.org/download.html
+      sqlite-dll-{arch-version}.zip - Precompiled Binaries for Windows - https://sqlite.org/download.html
  
-    2.) Class_SQLiteDB - https://github.com/AHK-just-me/Class_SQLiteDB
+      Class_SQLiteDB - https://github.com/AHK-just-me/Class_SQLiteDB
  
-    3.) AHKhttp - https://github.com/zhamlin/AHKhttp
+      AHKhttp - https://github.com/zhamlin/AHKhttp
 
 
 
 
 * Edit the SQLHTTP.ahk file.
 
-    1.) Change the DBLoc line to the location of your to.db database file:
+    Change the DBLoc line to the location of your to.db database file:
 
         DBLoc := "C:\TO_DB\todbmanager-0.3\to.db" ; Change to match the location name of your database as needed
 
@@ -52,6 +53,6 @@ SQLTables.ahk - A script to list the names of the SQL tables in a to.db
 
 * Edit the SQLTables.ahk file.
 
-    1.) Change the DBLoc line to the location of your to.db database file:
+    Change the DBLoc line to the location of your to.db database file:
 
         DBLoc := "C:\TO_DB\todbmanager-0.3\to.db" ; Change to match the location name of your database as needed
