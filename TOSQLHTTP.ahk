@@ -65,7 +65,7 @@ loop, Parse, qstrg, CSV
     sql := "Select * from stats where requester_id = '" . A_LoopField . "';" 
     db.GetTable(sql, Result)
     if (Result.Rows[1, 1])
-        element .=  """" . Result.Rows[1, 1] . """" . ":{""name"":" . """" . Result.Rows[1, 2] . """" . ",""attrs"":{""comm"":" . """" . Format("{1:0.2f}", Result.Rows[1, 6]) . """" . ",""pay"":" . """" . Format("{1:0.2f}", Result.Rows[1, 5]) . """" . ",""fair"":" . """" . Format("{1:0.2f}", Result.Rows[1, 3]) . """" . ",""fast"":" . """" . Format("{1:0.2f}", Result.Rows[1, 4]) . """" . "},""reviews"":" . Result.Rows[1, 8] . ",""tos_flags"":" . Result.Rows[1, 7] . "},"
+        element .=  """" . Result.Rows[1, 1] . """" . ":{""name"":" . """" . RegExReplace(Result.Rows[1, 2], "(.*[^\s]).*$","$1") . """" . ",""attrs"":{""comm"":" . """" . Format("{1:0.2f}", Result.Rows[1, 6]) . """" . ",""pay"":" . """" . Format("{1:0.2f}", Result.Rows[1, 5]) . """" . ",""fair"":" . """" . Format("{1:0.2f}", Result.Rows[1, 3]) . """" . ",""fast"":" . """" . Format("{1:0.2f}", Result.Rows[1, 4]) . """" . "},""reviews"":" . Result.Rows[1, 8] . ",""tos_flags"":" . Result.Rows[1, 7] . "},"
     else
         element .=  """" . A_LoopField . """" . ":" . """" . """" . ","
 }    
@@ -77,5 +77,5 @@ return
 
 
 #Include %A_ScriptDir%\Class_SQLiteDB.ahk
-#include, %A_ScriptDir%\AHKhttp.ahk
-#include <AHKsock>
+#Include %A_ScriptDir%\AHKhttp.ahk
+#Include <AHKsock>
