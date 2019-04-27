@@ -363,11 +363,9 @@ class Socket
         this.socket := socket
     }
 
-    ;Close(timeout = 5000) {
-    ;   ;AHKsock_Close(iSocket, timeout)
-    ;   AHKsock_Close()
-    ;  ;AHKsock_Close(iSocket, timeout)
-    ;}
+    Close(timeout = 5000) {
+       AHKsock_Close(iSocket, timeout)
+    }
 
     SetData(data) {
         this.data := data
