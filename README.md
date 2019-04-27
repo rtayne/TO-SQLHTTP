@@ -22,14 +22,7 @@ Installation:
       Unzip AHKsock.ahk into the AHK Standard Library or the AHK User Library - Documents\AutoHotkey\Lib:
       
 
-* Download AHKhttp from https://github.com/zhamlin/AHKhttp
-      Unzip the following files into the TOSQLHTTP.ahk script directory:
-            AHKhttp.ahk
-            logo.png
-            mime.types
-              
-
- * Download Class_SQLiteDB from https://github.com/AHK-just-me/Class_SQLiteDB
+* Download Class_SQLiteDB from https://github.com/AHK-just-me/Class_SQLiteDB
       Unzip Class_SQLiteDB.ahk into the TOSQLHTTP.ahk script directory
  
  
