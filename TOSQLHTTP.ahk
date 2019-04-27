@@ -195,7 +195,7 @@ HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 
 
     if (!sockets[iSocket]) {
         sockets[iSocket] := new Socket(iSocket)
-        AHKsock_SockOpt(iSocket, "SO_KEEPALIVE", true)
+        AHKsock_SockOpt(iSocket, "TCP_NODELAY", True)
     }
     socket := sockets[iSocket]
 
