@@ -159,6 +159,7 @@ class HttpServer
         }
         response.SetBody(data, length)
         response.headers["Content-Type"] := this.GetMimeType(file)
+        response.headers["Accept-Ranges"] := "bytes"
     }
 
     SetPaths(paths) {
