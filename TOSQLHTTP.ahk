@@ -150,7 +150,7 @@ class HttpServer
     ServeFile(ByRef response, file) {
         Loop
         {
-            f := FileOpen(file, "r-rwd")
+            f := FileOpen(file, "r-wd")
             If IsObject(f)
             {
                 length := f.RawRead(data, f.Length)
