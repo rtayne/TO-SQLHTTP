@@ -26,6 +26,7 @@ return
 Logo(ByRef req, ByRef res, ByRef server) {
     server.ServeFile(res, A_ScriptDir . "/logo.png")
     res.headers["Connection"] := "keep-alive"
+    res.headers["Access-Control-Max-Age"] := "120"
     res.status := 200
 }
 
@@ -60,6 +61,7 @@ handleApi(ByRef req, ByRef res, server) {
     res.headers["Access-Control-Allow-Origin"] := "*"
     res.headers["Content-Type"] := "text/html; charset=utf-8"
     res.headers["Connection"] := "keep-alive"
+    res.headers["Access-Control-Max-Age"] := "120"
     qstrg := req.queries["ids"] ; Enumerate the Query String Parameters
     Gosub getsql
     res.status := 200
