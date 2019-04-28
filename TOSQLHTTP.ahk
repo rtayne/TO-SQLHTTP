@@ -3,6 +3,7 @@
 #SingleInstance, force
 Menu, Tray, Add , Kill, CloseAHKsock
 SetBatchLines, -1
+ListLines Off
 
 
 ; AHKhttp configuration
@@ -19,7 +20,7 @@ server.Serve(8000)
 
 ; SQLite configuration
 db := new SQLiteDB
-DBLoc := "C:\Users\Robert Tayne\Downloads\TO_DB\todbmanager-master\to.db" ; Change to match the location name of your database as needed
+DBLoc := "C:\TO_DB\todbmanager-master\to.db" ; Change to match the location name of your database as needed
 DBAccess := "R" ; Open db Readonly
 return
 
@@ -31,12 +32,14 @@ Logo(ByRef req, ByRef res, ByRef server) {
 }
 
 NotFound(ByRef req, ByRef res) {
+    res.headers["Connection"] := "keep-alive"
     res.SetBodyText("Page not found")
 }
 
 HelloWorld(ByRef req, ByRef res) {
     html := getHTML()
     res.SetBodyText(html)
+    res.headers["Connection"] := "keep-alive"
     res.status := 200
 }
 
@@ -200,20 +203,25 @@ HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 
     
     if (!sockets[iSocket]) {
         sockets[iSocket] := new Socket(iSocket)
-        ;AHKsock_SockOpt(iSocket, "SO_KEEPALIVE", true)       
+        ;SockOptions go here
+        AHKsock_SockOpt(iSocket, "TCP_NODELAY", true)
+        ;OutputDebug, % "Socket...." iSocket " AHKsock_SockOpt...SO_KEEPALIVE " AHKsock_SockOpt(iSocket, "SO_KEEPALIVE", -1) " SO_SNDBUF " AHKsock_SockOpt(iSocket, "SO_SNDBUF", -1) " SO_RCVBUF " AHKsock_SockOpt(iSocket, "SO_RCVBUF", -1) " TCP_NODELAY " AHKsock_SockOpt(iSocket, "TCP_NODELAY", -1) " ErrorLevel ..." ErrorLevel
     }
-    socket := sockets[iSocket]
     
-    OutputDebug, % "AHKsock_SockOpt...SO_KEEPALIVE " AHKsock_SockOpt(iSocket, "SO_KEEPALIVE", -1) " SO_SNDBUF " AHKsock_SockOpt(iSocket, "SO_SNDBUF", -1) " SO_RCVBUF " AHKsock_SockOpt(iSocket, "SO_RCVBUF", -1) " TCP_NODELAY " AHKsock_SockOpt(iSocket, "TCP_NODELAY", -1) " ErrorLevel ..." ErrorLevel
+     
+    
+    socket := sockets[iSocket]
     
         
     
     if (sEvent == "DISCONNECTED") {
+        ;OutputDebug, %  sEvent " Socket....." iSocket
         socket.request := false
         sockets[iSocket] := false
-    } else if (sEvent == "SEND") {
+        
+    } else if (sEvent == "SEND" || sEvent == "SENDLAST") {
         if (socket.TrySend()) {
-            OutputDebug, % "Success! Data Sent."
+            ;OutputDebug, % "Success! Data Sent from ....." sEvent " Socket....." iSocket
         }
 
     } else if (sEvent == "RECEIVED") {
@@ -253,7 +261,7 @@ HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 
         }
         if (socket.TrySend()) {
             if (!request.IsMultipart() || request.done) {
-                OutputDebug, % "Success! Data Sent."
+                ;OutputDebug, % "Success! Data Sent from ....." sEvent
             }
         }    
 
@@ -384,7 +392,6 @@ class Socket
         length := this.data.length
 
         this.dataSent := 0
-        ;OutputDebug, % "AHKsock_SockOpt...SO_KEEPALIVE " AHKsock_SockOpt(this.socket, SO_KEEPALIVE) " SO_SNDBUF " AHKsock_SockOpt(this.socket, SO_SNDBUF) " SO_RCVBUF " AHKsock_SockOpt(this.socket, SO_RCVBUF) " TCP_NODELAY " AHKsock_SockOpt(this.socket, TCP_NODELAY) " ErrorLevel ..." ErrorLevel
         loop {
             if ((i := AHKsock_Send(this.socket, p, length - this.dataSent)) < 0) {
                 ;Check if we received WSAEWOULDBLOCK errors
@@ -392,12 +399,12 @@ class Socket
                     return false ;We'll keep sending data the next time we get the SEND event
                 } else { ;Something bad has happened
                     OutputDebug, % "Something bad has happened - AHKsock_Send failed with return value = " i " and ErrorLevel = " ErrorLevel
-                    AHKsock_Close(this.socket)
+                    OutputDebug, % "Socket..." this.socket " from ....." sEvent "AHKsock_Close....." AHKsock_Close(this.socket) " ErrorLevel " ErrorLevel
                     return false 
                 }
             }
-            OutputDebug, % "AHKsock_SockOpt...SO_KEEPALIVE " AHKsock_SockOpt(this.socket, SO_KEEPALIVE) " SO_SNDBUF " AHKsock_SockOpt(this.socket, SO_SNDBUF) " SO_RCVBUF " AHKsock_SockOpt(this.socket, SO_RCVBUF) " TCP_NODELAY " AHKsock_SockOpt(this.socket, TCP_NODELAY) " ErrorLevel ..." ErrorLevel
-            OutputDebug, % "We sent " i " bytes of " length " bytes total" 
+            ;OutputDebug, % "Socket...." this.socket " AHKsock_SockOpt...SO_KEEPALIVE " AHKsock_SockOpt(this.socket, "SO_KEEPALIVE", -1) " SO_SNDBUF " AHKsock_SockOpt(this.socket, "SO_SNDBUF", -1) " SO_RCVBUF " AHKsock_SockOpt(this.socket, "SO_RCVBUF", -1) " TCP_NODELAY " AHKsock_SockOpt(this.socket, "TCP_NODELAY", -1) " ErrorLevel ..." ErrorLevel
+            ;OutputDebug, % "We sent " i " bytes of " length " bytes total" 
             if (i < length - this.dataSent) {
                 this.dataSent += i
             } else {
@@ -477,5 +484,6 @@ CloseAHKsock:
 ; Closedown all winsock sockets and exit the app
 AHKsock_Close()
 ExitApp
+
 
 
