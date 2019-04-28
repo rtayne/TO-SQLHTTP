@@ -1,9 +1,9 @@
 #NoEnv
 #Persistent
 #SingleInstance, force
-SetBatchLines, -1
-Process, Priority,, High
 Menu, Tray, Add , Kill, CloseAHKsock
+SetBatchLines, -1
+
 
 ; AHKhttp configuration
 paths := {}
@@ -19,7 +19,7 @@ server.Serve(8000)
 
 ; SQLite configuration
 db := new SQLiteDB
-DBLoc := "C:\TO_DB\todbmanager-0.3\to.db" ; Change to match the location name of your database as needed
+DBLoc := "C:\Users\Robert Tayne\Downloads\TO_DB\todbmanager-master\to.db" ; Change to match the location name of your database as needed
 DBAccess := "R" ; Open db Readonly
 return
 
@@ -187,6 +187,11 @@ class HttpServer
         HttpServer.servers[port] := this
 
         AHKsock_Listen(port, "HttpHandler")
+        OutputDebug, % "AHKsock_Listen...." AHKsock_Listen(port, "()")
+        
+        
+        AHKsock_ErrorHandler("AHKsockErrors")
+        OutputDebug, % "AHKsock_ErrorHandler...." AHKsock_ErrorHandler("""")
     }
 }
 
@@ -195,16 +200,17 @@ HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 
 
     if (!sockets[iSocket]) {
         sockets[iSocket] := new Socket(iSocket)
-        AHKsock_SockOpt(iSocket, "TCP_NODELAY", True)
     }
     socket := sockets[iSocket]
-
+    
+    
+    
     if (sEvent == "DISCONNECTED") {
         socket.request := false
         sockets[iSocket] := false
     } else if (sEvent == "SEND") {
         if (socket.TrySend()) {
-            ;socket.Close()
+            OutputDebug, % "Success! Data Sent."
         }
 
     } else if (sEvent == "RECEIVED") {
@@ -244,7 +250,7 @@ HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 
         }
         if (socket.TrySend()) {
             if (!request.IsMultipart() || request.done) {
-                ;socket.Close()
+                OutputDebug, % "Success! Data Sent."
             }
         }    
 
@@ -363,10 +369,6 @@ class Socket
         this.socket := socket
     }
 
-    Close(timeout = 5000) {
-       AHKsock_Close(iSocket, timeout)
-    }
-
     SetData(data) {
         this.data := data
     }
@@ -379,19 +381,23 @@ class Socket
         length := this.data.length
 
         this.dataSent := 0
-        loop {          
+        ;OutputDebug, % "AHKsock_SockOpt...SO_KEEPALIVE " AHKsock_SockOpt(this.socket, SO_KEEPALIVE) " SO_SNDBUF " AHKsock_SockOpt(this.socket, SO_SNDBUF) " SO_RCVBUF " AHKsock_SockOpt(this.socket, SO_RCVBUF) " TCP_NODELAY " AHKsock_SockOpt(this.socket, TCP_NODELAY) " ErrorLevel ..." ErrorLevel
+        loop {
             if ((i := AHKsock_Send(this.socket, p, length - this.dataSent)) < 0) {
-                if (i == -2) {
-                    return
-                } else {
-                    ; Failed to send
-                    return
+                ;Check if we received WSAEWOULDBLOCK errors
+                if (i == -2 || i== -5) {
+                    return false ;We'll keep sending data the next time we get the SEND event
+                } else { ;Something bad has happened
+                    OutputDebug, % "Something bad has happened - AHKsock_Send failed with return value = " i " and ErrorLevel = " ErrorLevel
+                    AHKsock_Close(this.socket)
+                    return false 
                 }
             }
-
+            OutputDebug, % "We sent " i " bytes of " length " bytes total" 
             if (i < length - this.dataSent) {
                 this.dataSent += i
             } else {
+                ;We're done sending data so break out of the loop
                 break
             }
         }
@@ -455,6 +461,9 @@ class Buffer
     }
 }
 
+AHKsockErrors(iError, iSocket) {
+    OutputDebug, % "Error " iError " with error code = " ErrorLevel ((iSocket <> -1) ? " on socket " iSocket "." : ".") 
+}
 
 
 #Include %A_ScriptDir%\Class_SQLiteDB.ahk
@@ -464,3 +473,4 @@ CloseAHKsock:
 ; Closedown all winsock sockets and exit the app
 AHKsock_Close()
 ExitApp
+
