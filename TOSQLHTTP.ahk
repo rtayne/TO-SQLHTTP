@@ -195,10 +195,12 @@ class HttpServer
                
         AHKsock_ErrorHandler("AHKsockErrors")
         OutputDebug, % "AHKsock_ErrorHandler...." AHKsock_ErrorHandler("""")
+        
     }
 }
 
 HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 0, bDataLength = 0) {
+    
     static sockets := {}
     
     if (!sockets[iSocket]) {
@@ -215,13 +217,13 @@ HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 
         
     
     if (sEvent == "DISCONNECTED") {
-        ;OutputDebug, %  sEvent " Socket....." iSocket
+        OutputDebug, %  sEvent " Socket....." iSocket
         socket.request := false
         sockets[iSocket] := false
-        
+        return
     } else if (sEvent == "SEND" || sEvent == "SENDLAST") {
         if (socket.TrySend()) {
-            ;OutputDebug, % "Success! Data Sent from ....." sEvent " Socket....." iSocket
+            OutputDebug, % "Success! Data Sent from a " sEvent " sEvent from Socket " iSocket
         }
 
     } else if (sEvent == "RECEIVED") {
@@ -248,6 +250,7 @@ HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 
         }
 
         if (request.bytesLeft <= 0) {
+            ;We're done
             request.done := true
         } else {
             socket.request := request
@@ -255,17 +258,21 @@ HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 
 
         if (request.done || request.IsMultipart()) {
             response := server.Handle(request)
+            ;OutputDebug % "request.done " request.done " request.IsMultipart() " request.IsMultipart() " response.status " response.status
             if (response.status) {
                 socket.SetData(response.Generate())
             }
         }
         if (socket.TrySend()) {
             if (!request.IsMultipart() || request.done) {
-                ;OutputDebug, % "Success! Data Sent from ....." sEvent
+                OutputDebug, % "Success! Data Sent from a " sEvent " sEvent from Socket " iSocket
+                ;OutputDebug, % "Close Socket " iSocket " meesage from AHKsock_Close..... " AHKsock_Close(iSocket) " ErrorLevel " ErrorLevel
+                return
             }
         }    
 
     }
+    return
 }
 
 class HttpRequest
@@ -404,7 +411,7 @@ class Socket
                 }
             }
             ;OutputDebug, % "Socket...." this.socket " AHKsock_SockOpt...SO_KEEPALIVE " AHKsock_SockOpt(this.socket, "SO_KEEPALIVE", -1) " SO_SNDBUF " AHKsock_SockOpt(this.socket, "SO_SNDBUF", -1) " SO_RCVBUF " AHKsock_SockOpt(this.socket, "SO_RCVBUF", -1) " TCP_NODELAY " AHKsock_SockOpt(this.socket, "TCP_NODELAY", -1) " ErrorLevel ..." ErrorLevel
-            ;OutputDebug, % "We sent " i " bytes of " length " bytes total" 
+            OutputDebug, % "We sent " i " bytes of " length " bytes total" 
             if (i < length - this.dataSent) {
                 this.dataSent += i
             } else {
@@ -414,7 +421,6 @@ class Socket
         }
         this.dataSent := 0
         this.data := ""
-
         return true
     }
 }
@@ -434,7 +440,7 @@ class Buffer
     }
 
     GetStrSize(str, encoding = "UTF-8") {
-        encodingSize := ((encoding="utf-16" || encoding="cp1200") ? 2 : 1)
+        encodingSize := ((encoding="UTF-16" || encoding="CP1200") ? 2 : 1)
         ; length of string, minus null char
         return StrPut(str, encoding) * encodingSize - encodingSize
     }
@@ -477,8 +483,10 @@ AHKsockErrors(iError, iSocket) {
 }
 
 
+
 #Include %A_ScriptDir%\Class_SQLiteDB.ahk
 #Include <AHKsock>
+
 
 CloseAHKsock:
 ; Closedown all winsock sockets and exit the app
