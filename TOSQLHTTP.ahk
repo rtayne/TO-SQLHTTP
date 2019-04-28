@@ -189,7 +189,7 @@ class HttpServer
         AHKsock_Listen(port, "HttpHandler")
         OutputDebug, % "AHKsock_Listen...." AHKsock_Listen(port, "()")
         
-        
+               
         AHKsock_ErrorHandler("AHKsockErrors")
         OutputDebug, % "AHKsock_ErrorHandler...." AHKsock_ErrorHandler("""")
     }
@@ -197,13 +197,16 @@ class HttpServer
 
 HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 0, bDataLength = 0) {
     static sockets := {}
-
+    
     if (!sockets[iSocket]) {
         sockets[iSocket] := new Socket(iSocket)
+        ;AHKsock_SockOpt(iSocket, "SO_KEEPALIVE", true)       
     }
     socket := sockets[iSocket]
     
+    OutputDebug, % "AHKsock_SockOpt...SO_KEEPALIVE " AHKsock_SockOpt(iSocket, "SO_KEEPALIVE", -1) " SO_SNDBUF " AHKsock_SockOpt(iSocket, "SO_SNDBUF", -1) " SO_RCVBUF " AHKsock_SockOpt(iSocket, "SO_RCVBUF", -1) " TCP_NODELAY " AHKsock_SockOpt(iSocket, "TCP_NODELAY", -1) " ErrorLevel ..." ErrorLevel
     
+        
     
     if (sEvent == "DISCONNECTED") {
         socket.request := false
@@ -393,6 +396,7 @@ class Socket
                     return false 
                 }
             }
+            OutputDebug, % "AHKsock_SockOpt...SO_KEEPALIVE " AHKsock_SockOpt(this.socket, SO_KEEPALIVE) " SO_SNDBUF " AHKsock_SockOpt(this.socket, SO_SNDBUF) " SO_RCVBUF " AHKsock_SockOpt(this.socket, SO_RCVBUF) " TCP_NODELAY " AHKsock_SockOpt(this.socket, TCP_NODELAY) " ErrorLevel ..." ErrorLevel
             OutputDebug, % "We sent " i " bytes of " length " bytes total" 
             if (i < length - this.dataSent) {
                 this.dataSent += i
@@ -473,4 +477,5 @@ CloseAHKsock:
 ; Closedown all winsock sockets and exit the app
 AHKsock_Close()
 ExitApp
+
 
