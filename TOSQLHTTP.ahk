@@ -346,7 +346,7 @@ class HttpResponse
         FormatTime, date,, ddd, d MMM yyyy HH:mm:ss
         this.headers["Date"] := date
         this.headers["Access-Control-Allow-Origin"] := "*"
-        this.headers["Connection"] := "keep-alive"
+        this.headers["Connection"] := "Keep-Alive: timeout=5, max=99"
         this.headers["Access-Control-Max-Age"] := "120"
         
 
