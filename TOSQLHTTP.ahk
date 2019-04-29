@@ -26,20 +26,16 @@ return
 
 Logo(ByRef req, ByRef res, ByRef server) {
     server.ServeFile(res, A_ScriptDir . "/logo.png")
-    res.headers["Connection"] := "keep-alive"
-    res.headers["Access-Control-Max-Age"] := "120"
     res.status := 200
 }
 
 NotFound(ByRef req, ByRef res) {
-    res.headers["Connection"] := "keep-alive"
     res.SetBodyText("Page not found")
 }
 
 HelloWorld(ByRef req, ByRef res) {
     html := getHTML()
     res.SetBodyText(html)
-    res.headers["Connection"] := "keep-alive"
     res.status := 200
 }
 
@@ -61,14 +57,11 @@ getHTML() {
 
 handleApi(ByRef req, ByRef res, server) {
     global qstrg, body
-    res.headers["Access-Control-Allow-Origin"] := "*"
     res.headers["Content-Type"] := "text/html; charset=utf-8"
-    res.headers["Connection"] := "keep-alive"
-    res.headers["Access-Control-Max-Age"] := "120"
     qstrg := req.queries["ids"] ; Enumerate the Query String Parameters
     Gosub getsql
-    res.status := 200
     res.SetBodyText(body)
+    res.status := 200
 }
 
 getsql:
@@ -117,6 +110,7 @@ class Uri
 class HttpServer
 {
     static servers := {}
+    
 
     LoadMimes(file) {
         if (!FileExist(file))
@@ -190,11 +184,11 @@ class HttpServer
         HttpServer.servers[port] := this
 
         AHKsock_Listen(port, "HttpHandler")
-        OutputDebug, % "AHKsock_Listen...." AHKsock_Listen(port, "()")
+        ;OutputDebug, % "AHKsock_Listen...." AHKsock_Listen(port, "()")
         
                
         AHKsock_ErrorHandler("AHKsockErrors")
-        OutputDebug, % "AHKsock_ErrorHandler...." AHKsock_ErrorHandler("""")
+        ;OutputDebug, % "AHKsock_ErrorHandler...." AHKsock_ErrorHandler("""")
         
     }
 }
@@ -202,6 +196,7 @@ class HttpServer
 HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 0, bDataLength = 0) {
     
     static sockets := {}
+    
     
     if (!sockets[iSocket]) {
         sockets[iSocket] := new Socket(iSocket)
@@ -217,13 +212,13 @@ HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 
         
     
     if (sEvent == "DISCONNECTED") {
-        OutputDebug, %  sEvent " Socket....." iSocket
+        ;OutputDebug, %  sEvent " Socket....." iSocket
         socket.request := false
         sockets[iSocket] := false
         return
     } else if (sEvent == "SEND" || sEvent == "SENDLAST") {
         if (socket.TrySend()) {
-            OutputDebug, % "Success! Data Sent from a " sEvent " sEvent from Socket " iSocket
+            ;OutputDebug, % "Success! Data Sent from a " sEvent " sEvent from Socket " iSocket
         }
 
     } else if (sEvent == "RECEIVED") {
@@ -265,7 +260,7 @@ HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 
         }
         if (socket.TrySend()) {
             if (!request.IsMultipart() || request.done) {
-                OutputDebug, % "Success! Data Sent from a " sEvent " sEvent from Socket " iSocket
+                ;OutputDebug, % "Success! Data Sent from a " sEvent " sEvent from Socket " iSocket
                 ;OutputDebug, % "Close Socket " iSocket " meesage from AHKsock_Close..... " AHKsock_Close(iSocket) " ErrorLevel " ErrorLevel
                 return
             }
@@ -350,11 +345,17 @@ class HttpResponse
     Generate() {
         FormatTime, date,, ddd, d MMM yyyy HH:mm:ss
         this.headers["Date"] := date
+        this.headers["Access-Control-Allow-Origin"] := "*"
+        this.headers["Connection"] := "keep-alive"
+        this.headers["Access-Control-Max-Age"] := "120"
+        
 
         headers := this.protocol . " " . this.status . "`r`n"
         for key, value in this.headers {
             headers := headers . key . ": " . value . "`r`n"
         }
+        
+        
         headers := headers . "`r`n"
         length := this.headers["Content-Length"]
 
@@ -405,13 +406,13 @@ class Socket
                 if (i == -2 || i== -5) {
                     return false ;We'll keep sending data the next time we get the SEND event
                 } else { ;Something bad has happened
-                    OutputDebug, % "Something bad has happened - AHKsock_Send failed with return value = " i " and ErrorLevel = " ErrorLevel
-                    OutputDebug, % "Socket..." this.socket " from ....." sEvent "AHKsock_Close....." AHKsock_Close(this.socket) " ErrorLevel " ErrorLevel
+                    ;OutputDebug, % "Something bad has happened - AHKsock_Send failed with return value = " i " and ErrorLevel = " ErrorLevel
+                    ;OutputDebug, % "Socket..." this.socket " from ....." sEvent "AHKsock_Close....." AHKsock_Close(this.socket) " ErrorLevel " ErrorLevel
                     return false 
                 }
             }
             ;OutputDebug, % "Socket...." this.socket " AHKsock_SockOpt...SO_KEEPALIVE " AHKsock_SockOpt(this.socket, "SO_KEEPALIVE", -1) " SO_SNDBUF " AHKsock_SockOpt(this.socket, "SO_SNDBUF", -1) " SO_RCVBUF " AHKsock_SockOpt(this.socket, "SO_RCVBUF", -1) " TCP_NODELAY " AHKsock_SockOpt(this.socket, "TCP_NODELAY", -1) " ErrorLevel ..." ErrorLevel
-            OutputDebug, % "We sent " i " bytes of " length " bytes total" 
+            ;OutputDebug, % "We sent " i " bytes of " length " bytes total" 
             if (i < length - this.dataSent) {
                 this.dataSent += i
             } else {
