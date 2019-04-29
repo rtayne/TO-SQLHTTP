@@ -208,8 +208,7 @@ HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 
      
     
     socket := sockets[iSocket]
-    
-        
+            
     
     if (sEvent == "DISCONNECTED") {
         ;OutputDebug, %  sEvent " Socket....." iSocket
@@ -220,7 +219,7 @@ HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 
         if (socket.TrySend()) {
             ;OutputDebug, % "Success! Data Sent from a " sEvent " sEvent from Socket " iSocket
         }
-
+        socket.Stop()
     } else if (sEvent == "RECEIVED") {
         server := HttpServer.servers[sPort]
 
@@ -346,7 +345,7 @@ class HttpResponse
         FormatTime, date,, ddd, d MMM yyyy HH:mm:ss
         this.headers["Date"] := date
         this.headers["Access-Control-Allow-Origin"] := "*"
-        this.headers["Connection"] := "Keep-Alive: timeout=5, max=99"
+        this.headers["Connection"] := "Keep-Alive: timeout=20"
         this.headers["Access-Control-Max-Age"] := "120"
         
 
@@ -382,10 +381,23 @@ class HttpResponse
 
 }
 
+
 class Socket
 {
     __New(socket) {
         this.socket := socket
+        this.interval := -20000
+        this.timer := ObjBindMethod(this, "Close")
+    }
+    
+    Close() {
+        ;OutputDebug, % "Socket...[" this.socket "] AHKsock_Close..... [" AHKsock_Close(this.socket) "] ErrorLevel " ErrorLevel
+        AHKsock_Close(this.socket)
+    }
+
+   Stop() {
+        timer := this.timer
+        SetTimer % timer, % this.interval
     }
 
     SetData(data) {
