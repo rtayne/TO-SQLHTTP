@@ -219,7 +219,7 @@ HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 
         if (socket.TrySend()) {
             ;OutputDebug, % "Success! Data Sent from a " sEvent " sEvent from Socket " iSocket
         }
-        socket.Stop()
+        socket.Close()
     } else if (sEvent == "RECEIVED") {
         server := HttpServer.servers[sPort]
 
@@ -387,15 +387,14 @@ class Socket
     __New(socket) {
         this.socket := socket
         this.interval := -20000
-        this.timer := ObjBindMethod(this, "Close")
+        this.timer := ObjBindMethod(this, "Stop")
     }
     
-    Close() {
-        ;OutputDebug, % "Socket...[" this.socket "] AHKsock_Close..... [" AHKsock_Close(this.socket) "] ErrorLevel " ErrorLevel
-        AHKsock_Close(this.socket)
+    Stop() {
+        OutputDebug, % "Socket [" this.socket "] AHKsock_Close Error [" AHKsock_Close(this.socket) "] ErrorLevel [" ErrorLevel "]"
     }
 
-   Stop() {
+   Close() {
         timer := this.timer
         SetTimer % timer, % this.interval
     }
