@@ -121,7 +121,7 @@ class HttpServer
         this.mimes := {}
         for i, data in types {
             info := StrSplit(data, " ")
-            type := info.Remove(1)
+            type := info.RemoveAt(1)
             ; Seperates type of content and file types
             info := StrSplit(LTrim(SubStr(data, StrLen(type) + 1)), " ")
 
@@ -168,10 +168,9 @@ class HttpServer
     Handle(ByRef request) {
         response := new HttpResponse()
         if (!this.paths[request.path]) {
-            func := this.paths["404"]
             response.status := 404
-            if (func)
-                func.(request, response, this)
+            if IsFunc(fn := this.paths["404"])
+                %fn%(request, response, this)
             return response
         } else {
             this.paths[request.path].(request, response, this)
@@ -182,42 +181,40 @@ class HttpServer
     Serve(port) {
         this.port := port
         HttpServer.servers[port] := this
-
         AHKsock_Listen(port, "HttpHandler")
-        ;OutputDebug, % "AHKsock_Listen...." AHKsock_Listen(port, "()")
-        
+        OutputDebug, % "AHKsock_Listen...." AHKsock_Listen(port, "()")       
                
         AHKsock_ErrorHandler("AHKsockErrors")
-        ;OutputDebug, % "AHKsock_ErrorHandler...." AHKsock_ErrorHandler("""")
+        OutputDebug, % "AHKsock_ErrorHandler...." AHKsock_ErrorHandler("""")
         
     }
+    
 }
 
 HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 0, bDataLength = 0) {
-    
     static sockets := {}
+    
     
     
     if (!sockets[iSocket]) {
         sockets[iSocket] := new Socket(iSocket)
+        ;OutputDebug, % "Default SocketOptions for [" iSocket "] AHKsock_SockOpt...SO_KEEPALIVE " AHKsock_SockOpt(iSocket, "SO_KEEPALIVE", -1) " SO_SNDBUF " AHKsock_SockOpt(iSocket, "SO_SNDBUF", -1) " SO_RCVBUF " AHKsock_SockOpt(iSocket, "SO_RCVBUF", -1) " TCP_NODELAY " AHKsock_SockOpt(iSocket, "TCP_NODELAY", -1) " ErrorLevel ..." ErrorLevel
         ;SockOptions go here
-        AHKsock_SockOpt(iSocket, "TCP_NODELAY", true)
-        ;OutputDebug, % "Socket...." iSocket " AHKsock_SockOpt...SO_KEEPALIVE " AHKsock_SockOpt(iSocket, "SO_KEEPALIVE", -1) " SO_SNDBUF " AHKsock_SockOpt(iSocket, "SO_SNDBUF", -1) " SO_RCVBUF " AHKsock_SockOpt(iSocket, "SO_RCVBUF", -1) " TCP_NODELAY " AHKsock_SockOpt(iSocket, "TCP_NODELAY", -1) " ErrorLevel ..." ErrorLevel
+        ;AHKsock_SockOpt(iSocket, "SO_SNDBUF", 1460)
+        ;AHKsock_SockOpt(iSocket, "SO_RCVBUF", 1460)
+        ;OutputDebug, % "New Default SocketOptions for [" iSocket "] AHKsock_SockOpt...SO_KEEPALIVE " AHKsock_SockOpt(iSocket, "SO_KEEPALIVE", -1) " SO_SNDBUF " AHKsock_SockOpt(iSocket, "SO_SNDBUF", -1) " SO_RCVBUF " AHKsock_SockOpt(iSocket, "SO_RCVBUF", -1) " TCP_NODELAY " AHKsock_SockOpt(iSocket, "TCP_NODELAY", -1) " ErrorLevel ..." ErrorLevel
     }
+    
     
      
     
     socket := sockets[iSocket]
-            
+    ;OutputDebug, %  "sEvent is " sEvent " iSocket [" iSocket  "]"  
     
-    if (sEvent == "DISCONNECTED") {
-        ;OutputDebug, %  sEvent " Socket....." iSocket
-        socket.request := false
-        sockets[iSocket] := false
-        return
-    } else if (sEvent == "SEND" || sEvent == "SENDLAST") {
+    if (sEvent == "SEND" || sEvent == "SENDLAST") {
+        ;OutputDebug, %  sEvent " Socket.....iSocket [" iSocket  "]"
         if (socket.TrySend()) {
-            ;OutputDebug, % "Success! Data Sent from a " sEvent " sEvent from Socket " iSocket
+            ;OutputDebug, % "Success! Data Sent from sEvent [" sEvent "] on Socket [" iSocket "]"
         }
         socket.Close()
     } else if (sEvent == "RECEIVED") {
@@ -228,16 +225,17 @@ HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 
         ; New request or old?
         if (socket.request) {
             ; Get data and append it to the existing request body
+            ;OutputDebug % "Old Requst"
             socket.request.bytesLeft -= StrLen(text)
             socket.request.body := socket.request.body . text
             request := socket.request
         } else {
+            ;OutputDebug % "New Requst"
             ; Parse new request
             request := new HttpRequest(text)
-
+            
             length := request.headers["Content-Length"]
             request.bytesLeft := length + 0
-
             if (request.body) {
                 request.bytesLeft -= StrLen(request.body)
             }
@@ -245,6 +243,7 @@ HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 
 
         if (request.bytesLeft <= 0) {
             ;We're done
+            ;OutputDebug % "We're done ...."
             request.done := true
         } else {
             socket.request := request
@@ -252,21 +251,22 @@ HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 
 
         if (request.done || request.IsMultipart()) {
             response := server.Handle(request)
-            ;OutputDebug % "request.done " request.done " request.IsMultipart() " request.IsMultipart() " response.status " response.status
+            ;OutputDebug % "if (request.done || request.IsMultipart()) { .... request.done [" request.done "] request.IsMultipart() [" request.IsMultipart() "] response.status [" response.status "]"
             if (response.status) {
                 socket.SetData(response.Generate())
             }
         }
         if (socket.TrySend()) {
             if (!request.IsMultipart() || request.done) {
-                ;OutputDebug, % "Success! Data Sent from a " sEvent " sEvent from Socket " iSocket
-                ;OutputDebug, % "Close Socket " iSocket " meesage from AHKsock_Close..... " AHKsock_Close(iSocket) " ErrorLevel " ErrorLevel
+                ;OutputDebug % "if (!request.IsMultipart() || request.done) { .... request.done [" request.done "] request.IsMultipart() [" request.IsMultipart() "] response.status [" response.status "]"
+                ;OutputDebug, % "Success! Data Sent from sEvent [" sEvent "] on Socket [" iSocket "]"
+                socket.request := false
+                sockets[iSocket] := false
                 return
             }
         }    
 
     }
-    return
 }
 
 class HttpRequest
@@ -308,7 +308,7 @@ class HttpRequest
         headers := StrSplit(data[1], "`n")
         this.body := LTrim(data[2], "`n")
 
-        this.GetPathInfo(headers.Remove(1))
+        this.GetPathInfo(headers.RemoveAt(1))
         this.GetQuery()
         this.headers := {}
 
@@ -329,6 +329,7 @@ class HttpRequest
             return true
         return false
     }
+    
 }
 
 class HttpResponse
@@ -363,7 +364,7 @@ class HttpResponse
 
         buffer.Append(this.body)
         buffer.Done()
-
+        
         return buffer
     }
 
@@ -390,10 +391,14 @@ class Socket
         this.timer := ObjBindMethod(this, "Stop")
     }
     
+    
     Stop() {
-        OutputDebug, % "Socket [" this.socket "] AHKsock_Close Error [" AHKsock_Close(this.socket) "] ErrorLevel [" ErrorLevel "]"
+        ;This OutputDebug is used to CLOSE the socket
+        ;OutputDebug, % "Closed socket [" this.socket "]  returned message is [" AHKsock_Close(this.socket) "] and ErrorLevel [" ErrorLevel "]"
+        AHKsock_Close(this.socket)
     }
 
+     
    Close() {
         timer := this.timer
         SetTimer % timer, % this.interval
@@ -408,22 +413,22 @@ class Socket
             return false
 
         p := this.data.GetPointer()
+        ;OutputDebug % "In the Class Socket this.data.length " this.data.length
         length := this.data.length
 
         this.dataSent := 0
         loop {
-            if ((i := AHKsock_Send(this.socket, p, length - this.dataSent)) < 0) {
+            if ((i := AHKsock_Send(this.socket, p, (length - this.dataSent))) < 0) {
                 ;Check if we received WSAEWOULDBLOCK errors
                 if (i == -2 || i== -5) {
                     return false ;We'll keep sending data the next time we get the SEND event
                 } else { ;Something bad has happened
-                    ;OutputDebug, % "Something bad has happened - AHKsock_Send failed with return value = " i " and ErrorLevel = " ErrorLevel
-                    ;OutputDebug, % "Socket..." this.socket " from ....." sEvent "AHKsock_Close....." AHKsock_Close(this.socket) " ErrorLevel " ErrorLevel
+                    ;OutputDebug, % "Something bad has happened - AHKsock_Send failed with return value = " i " and ErrorLevel = [" ErrorLevel "] !"
+                    ;OutputDebug, % "Socket [" this.socket "] AHKsock_Close Error [" AHKsock_Close(this.socket) "] ErrorLevel [" ErrorLevel "]"
                     return false 
                 }
             }
-            ;OutputDebug, % "Socket...." this.socket " AHKsock_SockOpt...SO_KEEPALIVE " AHKsock_SockOpt(this.socket, "SO_KEEPALIVE", -1) " SO_SNDBUF " AHKsock_SockOpt(this.socket, "SO_SNDBUF", -1) " SO_RCVBUF " AHKsock_SockOpt(this.socket, "SO_RCVBUF", -1) " TCP_NODELAY " AHKsock_SockOpt(this.socket, "TCP_NODELAY", -1) " ErrorLevel ..." ErrorLevel
-            ;OutputDebug, % "We sent " i " bytes of " length " bytes total" 
+            ;OutputDebug, % "In the Class Socket We sent " i " bytes of " length " bytes total and this.DataSent [" this.dataSent "]"
             if (i < length - this.dataSent) {
                 this.dataSent += i
             } else {
@@ -431,6 +436,7 @@ class Socket
                 break
             }
         }
+        
         this.dataSent := 0
         this.data := ""
         return true
@@ -459,7 +465,7 @@ class Buffer
 
     WriteStr(str, encoding = "UTF-8") {
         length := this.GetStrSize(str, encoding)
-        VarSetCapacity(text, length)
+        VarSetCapacity(text, length, 0)
         StrPut(str, &text, encoding)
 
         this.Write(&text, length)
@@ -469,15 +475,16 @@ class Buffer
     ; data is a pointer to the data
     Write(data, length) {
         p := this.GetPointer()
-        DllCall("RtlMoveMemory", "uint", p + this.length, "uint", data, "uint", length)
+        Ptr := A_PtrSize ? "Ptr" : "UInt" ; If A_PtrSize is not defined, use UInt instead.
+        DllCall("RtlMoveMemory", Ptr, p + this.length, Ptr, data, Ptr, length)
         this.length += length
     }
 
     Append(ByRef buffer) {
         destP := this.GetPointer()
         sourceP := buffer.GetPointer()
-
-        DllCall("RtlMoveMemory", "uint", destP + this.length, "uint", sourceP, "uint", buffer.length)
+        Ptr := A_PtrSize ? "Ptr" : "UInt" ; If A_PtrSize is not defined, use UInt instead.
+        DllCall("RtlMoveMemory", Ptr, destP + this.length, Ptr, sourceP, Ptr, buffer.length)
         this.length += buffer.length
     }
 
@@ -488,12 +495,12 @@ class Buffer
     Done() {
         this.SetCapacity("buffer", this.length)
     }
+    
 }
 
 AHKsockErrors(iError, iSocket) {
     OutputDebug, % "Error " iError " with error code = " ErrorLevel ((iSocket <> -1) ? " on socket " iSocket "." : ".") 
 }
-
 
 
 #Include %A_ScriptDir%\Class_SQLiteDB.ahk
