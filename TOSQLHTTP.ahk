@@ -175,6 +175,7 @@ class HttpServer
         } else {
             this.paths[request.path].(request, response, this)
         }
+        
         return response
     }
 
@@ -210,8 +211,10 @@ HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 
     
     socket := sockets[iSocket]
     ;OutputDebug, %  "sEvent is " sEvent " iSocket [" iSocket  "]"  
-    
-    if (sEvent == "SEND" || sEvent == "SENDLAST") {
+    if (sEvent == "DISCONNECTED") {
+        socket.request := false
+        sockets[iSocket] := false
+    } else if (sEvent == "SEND" || sEvent == "SENDLAST") {
         ;OutputDebug, %  sEvent " Socket.....iSocket [" iSocket  "]"
         if (socket.TrySend()) {
             ;OutputDebug, % "Success! Data Sent from sEvent [" sEvent "] on Socket [" iSocket "]"
@@ -260,8 +263,6 @@ HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 
             if (!request.IsMultipart() || request.done) {
                 ;OutputDebug % "if (!request.IsMultipart() || request.done) { .... request.done [" request.done "] request.IsMultipart() [" request.IsMultipart() "] response.status [" response.status "]"
                 ;OutputDebug, % "Success! Data Sent from sEvent [" sEvent "] on Socket [" iSocket "]"
-                socket.request := false
-                sockets[iSocket] := false
                 return
             }
         }    
@@ -475,17 +476,29 @@ class Buffer
     ; data is a pointer to the data
     Write(data, length) {
         p := this.GetPointer()
+        
+        pDest := p + this.length
+        
         Ptr := A_PtrSize ? "Ptr" : "UInt" ; If A_PtrSize is not defined, use UInt instead.
-        DllCall("RtlMoveMemory", Ptr, p + this.length, Ptr, data, Ptr, length)
+        DllCall("RtlMoveMemory", Ptr, pDest, Ptr, data, Ptr, length)
+        VarsetCapacity(pDest, -1)
+                
         this.length += length
+        
     }
 
     Append(ByRef buffer) {
         destP := this.GetPointer()
         sourceP := buffer.GetPointer()
+        
+        dDest := destP + this.length
+        
         Ptr := A_PtrSize ? "Ptr" : "UInt" ; If A_PtrSize is not defined, use UInt instead.
-        DllCall("RtlMoveMemory", Ptr, destP + this.length, Ptr, sourceP, Ptr, buffer.length)
+        DllCall("RtlMoveMemory", Ptr, dDest, Ptr, sourceP, Ptr, buffer.length)
+        VarsetCapacity(dDest, -1)
+        
         this.length += buffer.length
+        
     }
 
     GetPointer() {
