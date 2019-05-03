@@ -201,7 +201,7 @@ HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 
         ;OutputDebug, % "Default SocketOptions for [" iSocket "] AHKsock_SockOpt...SO_KEEPALIVE " AHKsock_SockOpt(iSocket, "SO_KEEPALIVE", -1) " SO_SNDBUF " AHKsock_SockOpt(iSocket, "SO_SNDBUF", -1) " SO_RCVBUF " AHKsock_SockOpt(iSocket, "SO_RCVBUF", -1) " TCP_NODELAY " AHKsock_SockOpt(iSocket, "TCP_NODELAY", -1) " ErrorLevel ..." ErrorLevel
         ;SockOptions go here
         AHKsock_SockOpt(iSocket, "TCP_NODELAY", True)
-        
+        ;AHKsock_SockOpt(iSocket, "SO_KEEPALIVE", True)
         ;OutputDebug, % "New Default SocketOptions for [" iSocket "] AHKsock_SockOpt...SO_KEEPALIVE " AHKsock_SockOpt(iSocket, "SO_KEEPALIVE", -1) " SO_SNDBUF " AHKsock_SockOpt(iSocket, "SO_SNDBUF", -1) " SO_RCVBUF " AHKsock_SockOpt(iSocket, "SO_RCVBUF", -1) " TCP_NODELAY " AHKsock_SockOpt(iSocket, "TCP_NODELAY", -1) " ErrorLevel ..." ErrorLevel
     }
     
@@ -209,21 +209,26 @@ HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 
      
     
     socket := sockets[iSocket]
-    ;OutputDebug, %  "sEvent is " sEvent " iSocket [" iSocket  "]"  
-    if (sEvent == "ACCEPTED") {
-        ;OutputDebug, %  sEvent " Socket.....iSocket [" iSocket  "]"
-        socket.Close()
+    OutputDebug, %  "NEW**** sEvent is " sEvent " iSocket [" iSocket  "]"  
+    if (sEvent == "DISCONNECTED") {
+        OutputDebug, %  sEvent " Socket.....iSocket [" iSocket  "]"
+        socket.request := false
+        sockets[iSocket] := false
+        
+    } else if (sEvent == "ACCEPTED") {
+        OutputDebug, %  sEvent " Socket.....iSocket [" iSocket  "]"
+        
+        
     } else if (sEvent == "SEND" || sEvent == "SENDLAST") {
-        ;OutputDebug, %  sEvent " Socket.....iSocket [" iSocket  "]"
+        OutputDebug, %  sEvent " Socket.....iSocket [" iSocket  "]"
         if (socket.TrySend()) {
-            ;OutputDebug, % "Success! Data Sent from sEvent [" sEvent "] on Socket [" iSocket "]"
-            socket.request := false
-            sockets[iSocket] := false
-            ;socket.Stop()
+            OutputDebug, % "Success! Data Sent from sEvent [" sEvent "] on Socket [" iSocket "]"
+            
+            socket.Close()
         }
-        return
+        
     } else if (sEvent == "RECEIVED") {
-        ;OutputDebug, %  sEvent " Socket.....iSocket [" iSocket  "]"
+        OutputDebug, %  sEvent " Socket.....iSocket [" iSocket  "]"
         server := HttpServer.servers[sPort]
 
         text := StrGet(&bData, "UTF-8")
@@ -236,8 +241,8 @@ HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 
             socket.request.body := socket.request.body . text
             request := socket.request
         } else {
-            ;OutputDebug % "New Requst"
             ; Parse new request
+            ;OutputDebug % "New Requst"
             request := new HttpRequest(text)
             
             length := request.headers["Content-Length"]
@@ -263,9 +268,12 @@ HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 
             }
         }
         if (socket.TrySend()) {
-            ;OutputDebug, % "Success! Data Sent from sEvent [" sEvent "] on Socket [" iSocket "]"
+            OutputDebug, % "*Success! Data Sent from sEvent [" sEvent "] on Socket [" iSocket "]"
+            
             if (!request.IsMultipart() || request.done) {
-                ;OutputDebug % "if (!request.IsMultipart() || request.done) { .... request.done [" request.done "] request.IsMultipart() [" request.IsMultipart() "] response.status [" response.status "]"
+                OutputDebug % "if (!request.IsMultipart() || request.done) { .... request.done [" request.done "] request.IsMultipart() [" request.IsMultipart() "] response.status [" response.status "]"
+                
+                socket.Close()
                 return
             }
         }    
@@ -350,7 +358,7 @@ class HttpResponse
         FormatTime, date, A_NowUTC, ddd, d MMM yyyy HH:mm:ss
         this.headers["Date"] := date . " GMT"
         this.headers["Access-Control-Allow-Origin"] := "*"
-        this.headers["Connection"] := "Keep-Alive: timeout=20"
+        this.headers["Connection"] := "Close"
         this.headers["Access-Control-Max-Age"] := "120"
         
 
@@ -391,15 +399,15 @@ class Socket
 {
     __New(socket) {
         this.socket := socket
-        this.interval := -20000
+        this.interval := -5000
         this.timer := ObjBindMethod(this, "Stop")
     }
     
     
     Stop() {
         ;This OutputDebug is used to CLOSE the socket
-        ;OutputDebug, % "Closed socket [" this.socket "]  returned message is [" AHKsock_Close(this.socket) "] and ErrorLevel [" ErrorLevel "]"
-        AHKsock_Close(this.socket)
+        OutputDebug, % "Closed socket [" this.socket "]  returned message is [" AHKsock_Close(this.socket) "] and ErrorLevel [" ErrorLevel "]"
+        ;AHKsock_Close(this.socket)
         
     }
 
