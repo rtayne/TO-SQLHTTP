@@ -26,7 +26,7 @@ return
 
 Logo(ByRef req, ByRef res, ByRef server) {
     server.ServeFile(res, A_ScriptDir . "/logo.png")
-    res.status := 200
+    res.status := 200 . " OK"
 }
 
 NotFound(ByRef req, ByRef res) {
@@ -36,7 +36,7 @@ NotFound(ByRef req, ByRef res) {
 HelloWorld(ByRef req, ByRef res) {
     html := getHTML()
     res.SetBodyText(html)
-    res.status := 200
+    res.status := 200 . " OK"
 }
 
 getHTML() {
@@ -61,8 +61,7 @@ handleApi(ByRef req, ByRef res, server) {
     qstrg := req.queries["ids"] ; Enumerate the Query String Parameters
     Gosub getsql
     res.SetBodyText(body)
-    res.status := 200
-}
+    res.status := 200 . " OK"
 
 getsql:
 db.OpenDB(DBLoc, DBAccess)
@@ -348,7 +347,7 @@ class HttpResponse
     }
 
     Generate() {
-        FormatTime, date,, ddd, d MMM yyyy HH:mm:ss
+        FormatTime, date, A_NowUTC, ddd, d MMM yyyy HH:mm:ss
         this.headers["Date"] := date
         this.headers["Access-Control-Allow-Origin"] := "*"
         this.headers["Connection"] := "Keep-Alive: timeout=20"
