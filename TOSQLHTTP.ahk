@@ -348,7 +348,7 @@ class HttpResponse
 
     Generate() {
         FormatTime, date, A_NowUTC, ddd, d MMM yyyy HH:mm:ss
-        this.headers["Date"] := date
+        this.headers["Date"] := date . " GMT"
         this.headers["Access-Control-Allow-Origin"] := "*"
         this.headers["Connection"] := "Keep-Alive: timeout=20"
         this.headers["Access-Control-Max-Age"] := "120"
