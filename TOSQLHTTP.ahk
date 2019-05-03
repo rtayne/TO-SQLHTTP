@@ -201,8 +201,8 @@ HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 
         sockets[iSocket] := new Socket(iSocket)
         ;OutputDebug, % "Default SocketOptions for [" iSocket "] AHKsock_SockOpt...SO_KEEPALIVE " AHKsock_SockOpt(iSocket, "SO_KEEPALIVE", -1) " SO_SNDBUF " AHKsock_SockOpt(iSocket, "SO_SNDBUF", -1) " SO_RCVBUF " AHKsock_SockOpt(iSocket, "SO_RCVBUF", -1) " TCP_NODELAY " AHKsock_SockOpt(iSocket, "TCP_NODELAY", -1) " ErrorLevel ..." ErrorLevel
         ;SockOptions go here
-        ;AHKsock_SockOpt(iSocket, "SO_SNDBUF", 1460)
-        ;AHKsock_SockOpt(iSocket, "SO_RCVBUF", 1460)
+        AHKsock_SockOpt(iSocket, "TCP_NODELAY", True)
+        
         ;OutputDebug, % "New Default SocketOptions for [" iSocket "] AHKsock_SockOpt...SO_KEEPALIVE " AHKsock_SockOpt(iSocket, "SO_KEEPALIVE", -1) " SO_SNDBUF " AHKsock_SockOpt(iSocket, "SO_SNDBUF", -1) " SO_RCVBUF " AHKsock_SockOpt(iSocket, "SO_RCVBUF", -1) " TCP_NODELAY " AHKsock_SockOpt(iSocket, "TCP_NODELAY", -1) " ErrorLevel ..." ErrorLevel
     }
     
@@ -211,16 +211,20 @@ HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 
     
     socket := sockets[iSocket]
     ;OutputDebug, %  "sEvent is " sEvent " iSocket [" iSocket  "]"  
-    if (sEvent == "DISCONNECTED") {
-        socket.request := false
-        sockets[iSocket] := false
+    if (sEvent == "ACCEPTED") {
+        ;OutputDebug, %  sEvent " Socket.....iSocket [" iSocket  "]"
+        socket.Close()
     } else if (sEvent == "SEND" || sEvent == "SENDLAST") {
         ;OutputDebug, %  sEvent " Socket.....iSocket [" iSocket  "]"
         if (socket.TrySend()) {
             ;OutputDebug, % "Success! Data Sent from sEvent [" sEvent "] on Socket [" iSocket "]"
+            socket.request := false
+            sockets[iSocket] := false
+            ;socket.Stop()
         }
-        socket.Close()
+        return
     } else if (sEvent == "RECEIVED") {
+        ;OutputDebug, %  sEvent " Socket.....iSocket [" iSocket  "]"
         server := HttpServer.servers[sPort]
 
         text := StrGet(&bData, "UTF-8")
@@ -260,9 +264,9 @@ HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 
             }
         }
         if (socket.TrySend()) {
+            ;OutputDebug, % "Success! Data Sent from sEvent [" sEvent "] on Socket [" iSocket "]"
             if (!request.IsMultipart() || request.done) {
                 ;OutputDebug % "if (!request.IsMultipart() || request.done) { .... request.done [" request.done "] request.IsMultipart() [" request.IsMultipart() "] response.status [" response.status "]"
-                ;OutputDebug, % "Success! Data Sent from sEvent [" sEvent "] on Socket [" iSocket "]"
                 return
             }
         }    
@@ -339,8 +343,8 @@ class HttpResponse
         this.headers := {}
         this.status := 0
         this.protocol := "HTTP/1.1"
-
         this.SetBodyText("")
+        
     }
 
     Generate() {
@@ -362,7 +366,7 @@ class HttpResponse
 
         buffer := new Buffer((StrLen(headers) * 2) + length)
         buffer.WriteStr(headers)
-
+        
         buffer.Append(this.body)
         buffer.Done()
         
@@ -397,6 +401,7 @@ class Socket
         ;This OutputDebug is used to CLOSE the socket
         ;OutputDebug, % "Closed socket [" this.socket "]  returned message is [" AHKsock_Close(this.socket) "] and ErrorLevel [" ErrorLevel "]"
         AHKsock_Close(this.socket)
+        
     }
 
      
@@ -410,8 +415,9 @@ class Socket
     }
 
     TrySend() {
-        if (!this.data || this.data == "")
+        if (!this.data || this.data == "") 
             return false
+        
 
         p := this.data.GetPointer()
         ;OutputDebug % "In the Class Socket this.data.length " this.data.length
@@ -468,34 +474,29 @@ class Buffer
         length := this.GetStrSize(str, encoding)
         VarSetCapacity(text, length, 0)
         StrPut(str, &text, encoding)
-
+        
         this.Write(&text, length)
+        
         return length
     }
 
     ; data is a pointer to the data
     Write(data, length) {
         p := this.GetPointer()
-        
-        pDest := p + this.length
-        
-        Ptr := A_PtrSize ? "Ptr" : "UInt" ; If A_PtrSize is not defined, use UInt instead.
-        DllCall("RtlMoveMemory", Ptr, pDest, Ptr, data, Ptr, length)
-        VarsetCapacity(pDest, -1)
                 
+        Ptr := A_PtrSize ? "Ptr" : "UInt" ; If A_PtrSize is not defined, use UInt instead.
+        DllCall("RtlMoveMemory", Ptr, p + this.length, Ptr, data, Ptr, length)
+                        
         this.length += length
-        
+       
     }
 
     Append(ByRef buffer) {
-        destP := this.GetPointer()
         sourceP := buffer.GetPointer()
-        
-        dDest := destP + this.length
+        destP := this.GetPointer()
         
         Ptr := A_PtrSize ? "Ptr" : "UInt" ; If A_PtrSize is not defined, use UInt instead.
-        DllCall("RtlMoveMemory", Ptr, dDest, Ptr, sourceP, Ptr, buffer.length)
-        VarsetCapacity(dDest, -1)
+        DllCall("RtlMoveMemory", Ptr, destP + this.length, Ptr, sourceP, Ptr, buffer.length)
         
         this.length += buffer.length
         
