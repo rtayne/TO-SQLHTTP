@@ -194,7 +194,7 @@ HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 
      
     
     if (sEvent == "ACCEPTED") {
-        socket.Close()
+        ;socket.Close()
     } else if (sEvent == "DISCONNECTED") {
         socket.request := false
         sockets[iSocket] := false
