@@ -1,7 +1,8 @@
 #NoEnv
 #Persistent
 #SingleInstance, force
-Menu, Tray, Add , Kill, CloseAHKsock
+
+
 SetBatchLines, -1
 ListLines Off
 
@@ -11,31 +12,30 @@ paths := {}
 paths["/"] := Func("HelloWorld")
 paths["/api/multi-attrs.php"] := Func("handleApi")
 paths["404"] := Func("NotFound")
-paths["/logo"] := Func("Logo")
+
 
 server := new HttpServer()
 server.LoadMimes(A_ScriptDir . "/mime.types")
 server.SetPaths(paths)
 server.Serve(8000)
 
+
 ; SQLite configuration
 db := new SQLiteDB
 DBLoc := "C:\TO_DB\todbmanager-master\to.db" ; Change to match the location name of your database as needed
 DBAccess := "R" ; Open db Readonly
+
+
 return
 
-Logo(ByRef req, ByRef res, ByRef server) {
-    server.ServeFile(res, A_ScriptDir . "/logo.png")
-    res.status := 200 . " OK"
-}
 
 NotFound(ByRef req, ByRef res) {
-    res.SetBodyText("Page not found")
+    res.SetBody("Page not found")
 }
 
 HelloWorld(ByRef req, ByRef res) {
     html := getHTML()
-    res.SetBodyText(html)
+    res.SetBody(html)
     res.status := 200 . " OK"
 }
 
@@ -55,13 +55,16 @@ getHTML() {
     return html
 }
 
+
+
 handleApi(ByRef req, ByRef res, server) {
     global qstrg, body
     res.headers["Content-Type"] := "text/html; charset=utf-8"
     qstrg := req.queries["ids"] ; Enumerate the Query String Parameters
     Gosub getsql
-    res.SetBodyText(body)
+    res.SetBody(body)
     res.status := 200 . " OK"
+}
 
 getsql:
 db.OpenDB(DBLoc, DBAccess)
@@ -143,23 +146,7 @@ class HttpServer
         return type
     }
 
-    ServeFile(ByRef response, file) {
-        Loop
-        {
-            f := FileOpen(file, "r-wd")
-            If IsObject(f)
-            {
-                length := f.RawRead(data, f.Length)
-                f.Close()
-                Break
-            }
-            Sleep, 0
-        }
-        response.SetBody(data, length)
-        response.headers["Content-Type"] := this.GetMimeType(file)
-        response.headers["Accept-Ranges"] := "bytes"
-    }
-
+    
     SetPaths(paths) {
         this.paths := paths
     }
@@ -167,14 +154,14 @@ class HttpServer
     Handle(ByRef request) {
         response := new HttpResponse()
         if (!this.paths[request.path]) {
-            response.status := 404
-            if IsFunc(fn := this.paths["404"])
-                %fn%(request, response, this)
+            func := this.paths["404"]
+            response.statusCode := 404
+            if (func)
+                func.(request, response, this)
             return response
         } else {
             this.paths[request.path].(request, response, this)
         }
-        
         return response
     }
 
@@ -198,86 +185,35 @@ HttpHandler(sEvent, iSocket = 0, sName = 0, sAddr = 0, sPort = 0, ByRef bData = 
     
     if (!sockets[iSocket]) {
         sockets[iSocket] := new Socket(iSocket)
-        ;OutputDebug, % "Default SocketOptions for [" iSocket "] AHKsock_SockOpt...SO_KEEPALIVE " AHKsock_SockOpt(iSocket, "SO_KEEPALIVE", -1) " SO_SNDBUF " AHKsock_SockOpt(iSocket, "SO_SNDBUF", -1) " SO_RCVBUF " AHKsock_SockOpt(iSocket, "SO_RCVBUF", -1) " TCP_NODELAY " AHKsock_SockOpt(iSocket, "TCP_NODELAY", -1) " ErrorLevel ..." ErrorLevel
         ;SockOptions go here
         AHKsock_SockOpt(iSocket, "TCP_NODELAY", True)
-        ;AHKsock_SockOpt(iSocket, "SO_KEEPALIVE", True)
-        ;OutputDebug, % "New Default SocketOptions for [" iSocket "] AHKsock_SockOpt...SO_KEEPALIVE " AHKsock_SockOpt(iSocket, "SO_KEEPALIVE", -1) " SO_SNDBUF " AHKsock_SockOpt(iSocket, "SO_SNDBUF", -1) " SO_RCVBUF " AHKsock_SockOpt(iSocket, "SO_RCVBUF", -1) " TCP_NODELAY " AHKsock_SockOpt(iSocket, "TCP_NODELAY", -1) " ErrorLevel ..." ErrorLevel
+        AHKsock_SockOpt(iSocket, "SO_KEEPALIVE", True)
     }
-    
+    socket := sockets[iSocket]
     
      
     
-    socket := sockets[iSocket]
-    OutputDebug, %  "NEW**** sEvent is " sEvent " iSocket [" iSocket  "]"  
-    if (sEvent == "DISCONNECTED") {
-        OutputDebug, %  sEvent " Socket.....iSocket [" iSocket  "]"
+    if (sEvent == "ACCEPTED") {
+        socket.Close()
+    } else if (sEvent == "DISCONNECTED") {
         socket.request := false
         sockets[iSocket] := false
-        
-    } else if (sEvent == "ACCEPTED") {
-        OutputDebug, %  sEvent " Socket.....iSocket [" iSocket  "]"
-        
-        
-    } else if (sEvent == "SEND" || sEvent == "SENDLAST") {
-        OutputDebug, %  sEvent " Socket.....iSocket [" iSocket  "]"
+        socket.Stop()
+    } else if (sEvent == "SEND" || sEvent == "SENDLAST" ) {
         if (socket.TrySend()) {
-            OutputDebug, % "Success! Data Sent from sEvent [" sEvent "] on Socket [" iSocket "]"
-            
-            socket.Close()
+            ;OutputDebug, % "*Success! Data Sent from sEvent [" sEvent "] on Socket [" iSocket "]"
         }
-        
     } else if (sEvent == "RECEIVED") {
-        OutputDebug, %  sEvent " Socket.....iSocket [" iSocket  "]"
+        
         server := HttpServer.servers[sPort]
 
         text := StrGet(&bData, "UTF-8")
-
-        ; New request or old?
-        if (socket.request) {
-            ; Get data and append it to the existing request body
-            ;OutputDebug % "Old Requst"
-            socket.request.bytesLeft -= StrLen(text)
-            socket.request.body := socket.request.body . text
-            request := socket.request
-        } else {
-            ; Parse new request
-            ;OutputDebug % "New Requst"
-            request := new HttpRequest(text)
-            
-            length := request.headers["Content-Length"]
-            request.bytesLeft := length + 0
-            if (request.body) {
-                request.bytesLeft -= StrLen(request.body)
-            }
-        }
-
-        if (request.bytesLeft <= 0) {
-            ;We're done
-            ;OutputDebug % "We're done ...."
-            request.done := true
-        } else {
-            socket.request := request
-        }
-
-        if (request.done || request.IsMultipart()) {
-            response := server.Handle(request)
-            ;OutputDebug % "if (request.done || request.IsMultipart()) { .... request.done [" request.done "] request.IsMultipart() [" request.IsMultipart() "] response.status [" response.status "]"
-            if (response.status) {
-                socket.SetData(response.Generate())
-            }
-        }
-        if (socket.TrySend()) {
-            OutputDebug, % "*Success! Data Sent from sEvent [" sEvent "] on Socket [" iSocket "]"
-            
-            if (!request.IsMultipart() || request.done) {
-                OutputDebug % "if (!request.IsMultipart() || request.done) { .... request.done [" request.done "] request.IsMultipart() [" request.IsMultipart() "] response.status [" response.status "]"
-                
-                socket.Close()
-                return
-            }
-        }    
-
+        request := new HttpRequest(text)
+        response := server.Handle(request)
+        
+        if (socket.TrySend(response.Generate())) {
+            ;OutputDebug, % "**Success! Data Sent from sEvent [" sEvent "] on Socket [" iSocket "]"
+        }   
     }
 }
 
@@ -315,42 +251,33 @@ class HttpRequest
     }
 
     Parse(data) {
-        this.raw := data
-        data := StrSplit(data, "`n`r")
+        data := StrSplit(data, "`n`n")
         headers := StrSplit(data[1], "`n")
         this.body := LTrim(data[2], "`n")
 
-        this.GetPathInfo(headers.RemoveAt(1))
+        this.GetPathInfo(headers.Remove(1))
         this.GetQuery()
         this.headers := {}
 
         for i, line in headers {
             pos := InStr(line, ":")
             key := SubStr(line, 1, pos - 1)
-            val := Trim(SubStr(line, pos + 1), "`n`r ")
+            val := LTrim(SubStr(line, pos + 1))
 
             this.headers[key] := val
         }
     }
-
-    IsMultipart() {
-        length := this.headers["Content-Length"]
-        expect := this.headers["Expect"]
-
-        if (expect = "100-continue" && length > 0)
-            return true
-        return false
-    }
-    
 }
 
 class HttpResponse
 {
     __New() {
         this.headers := {}
-        this.status := 0
+        this.statusCode := 0
         this.protocol := "HTTP/1.1"
-        this.SetBodyText("")
+        
+        
+        this.SetBody("")
         
     }
 
@@ -358,40 +285,22 @@ class HttpResponse
         FormatTime, date, A_NowUTC, ddd, d MMM yyyy HH:mm:ss
         this.headers["Date"] := date . " GMT"
         this.headers["Access-Control-Allow-Origin"] := "*"
-        this.headers["Connection"] := "Close"
+        this.headers["Connection"] := "Keep-Alive, 20"
         this.headers["Access-Control-Max-Age"] := "120"
         
 
-        headers := this.protocol . " " . this.status . "`r`n"
+        response := this.protocol . " " . this.statusCode . "`n"
         for key, value in this.headers {
-            headers := headers . key . ": " . value . "`r`n"
+            response := response . key . ": " . value . "`n"
         }
-        
-        
-        headers := headers . "`r`n"
-        length := this.headers["Content-Length"]
-
-        buffer := new Buffer((StrLen(headers) * 2) + length)
-        buffer.WriteStr(headers)
-        
-        buffer.Append(this.body)
-        buffer.Done()
-        
-        return buffer
+        response := response . "`n" . this.body
+        return response
     }
 
-    SetBody(ByRef body, length) {
-        this.body := new Buffer(length)
-        this.body.Write(&body, length)
-        this.headers["Content-Length"] := length
+    SetBody(body) {
+        this.headers["Content-Length"] := StrLen(body)
+        this.body := body
     }
-
-    SetBodyText(text) {
-        this.body := Buffer.FromString(text)
-        this.headers["Content-Length"] := this.body.length
-    }
-
-
 }
 
 
@@ -399,7 +308,7 @@ class Socket
 {
     __New(socket) {
         this.socket := socket
-        this.interval := -5000
+        this.interval := -20000
         this.timer := ObjBindMethod(this, "Stop")
     }
     
@@ -407,8 +316,6 @@ class Socket
     Stop() {
         ;This OutputDebug is used to CLOSE the socket
         OutputDebug, % "Closed socket [" this.socket "]  returned message is [" AHKsock_Close(this.socket) "] and ErrorLevel [" ErrorLevel "]"
-        ;AHKsock_Close(this.socket)
-        
     }
 
      
@@ -417,32 +324,29 @@ class Socket
         SetTimer % timer, % this.interval
     }
 
-    SetData(data) {
-        this.data := data
-    }
-
-    TrySend() {
-        if (!this.data || this.data == "") 
+    TrySend(data = "") {
+        if (data != "")
+            this.data := data
+        
+        if (!this.data || this.data == "")
             return false
         
-
-        p := this.data.GetPointer()
-        ;OutputDebug % "In the Class Socket this.data.length " this.data.length
-        length := this.data.length
+        length := StrLen(this.data)
+        VarSetCapacity(outData, length + 1)
+        StrPut(this.data, &outData, "UTF-8")
 
         this.dataSent := 0
         loop {
-            if ((i := AHKsock_Send(this.socket, p, (length - this.dataSent))) < 0) {
+            if ((i := AHKsock_Send(this.socket, &outData, length - this.dataSent)) < 0) {
                 ;Check if we received WSAEWOULDBLOCK errors
                 if (i == -2 || i== -5) {
-                    return false ;We'll keep sending data the next time we get the SEND event
+                    return  ;We'll keep sending data the next time we get the SEND event
                 } else { ;Something bad has happened
-                    ;OutputDebug, % "Something bad has happened - AHKsock_Send failed with return value = " i " and ErrorLevel = [" ErrorLevel "] !"
-                    ;OutputDebug, % "Socket [" this.socket "] AHKsock_Close Error [" AHKsock_Close(this.socket) "] ErrorLevel [" ErrorLevel "]"
-                    return false 
+                    OutputDebug, % "Something bad has happened - AHKsock_Send failed with return value = " i " and ErrorLevel = [" ErrorLevel "] !"
+                    OutputDebug, % "Socket [" this.socket "] AHKsock_Close Error [" AHKsock_Close(this.socket) "] ErrorLevel [" ErrorLevel "]"
+                    return 
                 }
             }
-            ;OutputDebug, % "In the Class Socket We sent " i " bytes of " length " bytes total and this.DataSent [" this.dataSent "]"
             if (i < length - this.dataSent) {
                 this.dataSent += i
             } else {
@@ -457,67 +361,7 @@ class Socket
     }
 }
 
-class Buffer
-{
-    __New(len) {
-        this.SetCapacity("buffer", len)
-        this.length := 0
-    }
 
-    FromString(str, encoding = "UTF-8") {
-        length := Buffer.GetStrSize(str, encoding)
-        buffer := new Buffer(length)
-        buffer.WriteStr(str)
-        return buffer
-    }
-
-    GetStrSize(str, encoding = "UTF-8") {
-        encodingSize := ((encoding="UTF-16" || encoding="CP1200") ? 2 : 1)
-        ; length of string, minus null char
-        return StrPut(str, encoding) * encodingSize - encodingSize
-    }
-
-    WriteStr(str, encoding = "UTF-8") {
-        length := this.GetStrSize(str, encoding)
-        VarSetCapacity(text, length, 0)
-        StrPut(str, &text, encoding)
-        
-        this.Write(&text, length)
-        
-        return length
-    }
-
-    ; data is a pointer to the data
-    Write(data, length) {
-        p := this.GetPointer()
-                
-        Ptr := A_PtrSize ? "Ptr" : "UInt" ; If A_PtrSize is not defined, use UInt instead.
-        DllCall("RtlMoveMemory", Ptr, p + this.length, Ptr, data, Ptr, length)
-                        
-        this.length += length
-       
-    }
-
-    Append(ByRef buffer) {
-        sourceP := buffer.GetPointer()
-        destP := this.GetPointer()
-        
-        Ptr := A_PtrSize ? "Ptr" : "UInt" ; If A_PtrSize is not defined, use UInt instead.
-        DllCall("RtlMoveMemory", Ptr, destP + this.length, Ptr, sourceP, Ptr, buffer.length)
-        
-        this.length += buffer.length
-        
-    }
-
-    GetPointer() {
-        return this.GetAddress("buffer")
-    }
-
-    Done() {
-        this.SetCapacity("buffer", this.length)
-    }
-    
-}
 
 AHKsockErrors(iError, iSocket) {
     OutputDebug, % "Error " iError " with error code = " ErrorLevel ((iSocket <> -1) ? " on socket " iSocket "." : ".") 
@@ -526,12 +370,5 @@ AHKsockErrors(iError, iSocket) {
 
 #Include %A_ScriptDir%\Class_SQLiteDB.ahk
 #Include <AHKsock>
-
-
-CloseAHKsock:
-; Closedown all winsock sockets and exit the app
-AHKsock_Close()
-ExitApp
-
 
 
