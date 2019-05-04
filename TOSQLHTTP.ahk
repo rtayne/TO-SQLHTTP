@@ -155,7 +155,7 @@ class HttpServer
         response := new HttpResponse()
         if (!this.paths[request.path]) {
             func := this.paths["404"]
-            response.statusCode := 404
+            response.status := 404
             if (func)
                 func.(request, response, this)
             return response
@@ -251,18 +251,19 @@ class HttpRequest
     }
 
     Parse(data) {
-        data := StrSplit(data, "`n`n")
+        this.raw := data
+        data := StrSplit(data, "`n`r")
         headers := StrSplit(data[1], "`n")
         this.body := LTrim(data[2], "`n")
 
-        this.GetPathInfo(headers.Remove(1))
+        this.GetPathInfo(headers.RemoveAt(1))
         this.GetQuery()
         this.headers := {}
 
         for i, line in headers {
             pos := InStr(line, ":")
             key := SubStr(line, 1, pos - 1)
-            val := LTrim(SubStr(line, pos + 1))
+            val := Trim(SubStr(line, pos + 1), "`n`r ")
 
             this.headers[key] := val
         }
@@ -273,7 +274,7 @@ class HttpResponse
 {
     __New() {
         this.headers := {}
-        this.statusCode := 0
+        this.status := 0
         this.protocol := "HTTP/1.1"
         
         
@@ -289,11 +290,11 @@ class HttpResponse
         this.headers["Access-Control-Max-Age"] := "120"
         
 
-        response := this.protocol . " " . this.statusCode . "`n"
+        response := this.protocol . " " . this.status . "`r`n"
         for key, value in this.headers {
-            response := response . key . ": " . value . "`n"
+            response := response . key . ": " . value . "`r`n"
         }
-        response := response . "`n" . this.body
+        response := response . "`r`n" . this.body 
         return response
     }
 
