@@ -62,7 +62,8 @@ handleApi(ByRef req, ByRef res, server) {
     res.headers["Content-Type"] := "text/html; charset=utf-8"
     qstrg := req.queries["ids"] ; Enumerate the Query String Parameters
     Gosub getsql
-    res.SetBody(body)
+    res.body := body
+    res.headers["Content-Length"] := StrPutVar(body, var, "UTF-8") - 1
     res.status := 200 . " OK"
 }
 
@@ -332,7 +333,7 @@ class Socket
         if (!this.data || this.data == "")
             return false
         
-        length := StrLen(this.data)
+        length := StrPutVar(this.data, var, "UTF-8") - 1
         VarSetCapacity(outData, length + 1)
         StrPut(this.data, &outData, "UTF-8")
 
@@ -368,6 +369,16 @@ AHKsockErrors(iError, iSocket) {
     OutputDebug, % "Error " iError " with error code = " ErrorLevel ((iSocket <> -1) ? " on socket " iSocket "." : ".") 
 }
 
+;StrPutVar function used instead of StrLen
+StrPutVar(string, ByRef var, encoding)
+{
+    ; Ensure capacity.
+    VarSetCapacity( var, StrPut(string, encoding)
+        ; StrPut returns char count, but VarSetCapacity needs bytes.
+        * ((encoding="utf-16"||encoding="cp1200") ? 2 : 1) )
+    ; Copy or convert the string.
+    return StrPut(string, &var, encoding)
+}
 
 #Include %A_ScriptDir%\Class_SQLiteDB.ahk
 #Include <AHKsock>
