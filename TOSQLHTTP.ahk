@@ -26,6 +26,8 @@ DBLoc := "C:\TO_DB\todbmanager-master\to.db" ; Change to match the location name
 DBAccess := "R" ; Open db Readonly
 
 
+
+Menu, Tray, Add , Kill HTTP and Exit, KillHTTP
 return
 
 
@@ -55,35 +57,33 @@ getHTML() {
     return html
 }
 
-
-
 handleApi(ByRef req, ByRef res, server) {
-    global qstrg, body
     res.headers["Content-Type"] := "text/html; charset=utf-8"
     qstrg := req.queries["ids"] ; Enumerate the Query String Parameters
-    Gosub getsql
-    res.body := body
-    res.headers["Content-Length"] := StrPutVar(body, var, "UTF-8") - 1
+    sqlstr := getsql(qstrg)
+    res.SetBody(sqlstr)
     res.status := 200 . " OK"
 }
 
-getsql:
-db.OpenDB(DBLoc, DBAccess)
-element := 
-loop, Parse, qstrg, CSV
-{
-    sql := "Select * from stats where requester_id = '" . A_LoopField . "';" 
-    db.GetTable(sql, Result)
-    if (Result.Rows[1, 1])
-        element .=  """" . Result.Rows[1, 1] . """" . ":{""name"":" . """" . RegExReplace(Result.Rows[1, 2], "(.*[^\s]).*$","$1") . """" . ",""attrs"":{""comm"":" . """" . Format("{1:0.2f}", Result.Rows[1, 6]) . """" . ",""pay"":" . """" . Format("{1:0.2f}", Result.Rows[1, 5]) . """" . ",""fair"":" . """" . Format("{1:0.2f}", Result.Rows[1, 3]) . """" . ",""fast"":" . """" . Format("{1:0.2f}", Result.Rows[1, 4]) . """" . "},""reviews"":" . Result.Rows[1, 8] . ",""tos_flags"":" . Result.Rows[1, 7] . "},"
-    else
-        element .=  """" . A_LoopField . """" . ":" . """" . """" . ","
-}    
-db.CloseDB()
-StringTrimRight, element, element, 1 ; remove trailing comma
-body := "{" . element . "}" ; jsonify the element
-return
-
+getsql(qstrg) {
+    global db, DBLoc, DBAccess
+    db.OpenDB(DBLoc, DBAccess)
+    element := 
+    loop, Parse, qstrg, CSV
+        {
+            sql := "Select * from stats where requester_id = '" . A_LoopField . "';" 
+            db.GetTable(sql, Result)
+            if (Result.Rows[1, 1])
+                element .=  """" . Result.Rows[1, 1] . """" . ":{""name"":" . """" . RegExReplace(Result.Rows[1, 2], "(.*[^\s]).*$","$1") . """" . ",""attrs"":{""comm"":" . """" . Format("{1:0.2f}", Result.Rows[1, 6]) . """" . ",""pay"":" . """" . Format("{1:0.2f}", Result.Rows[1, 5]) . """" . ",""fair"":" . """" . Format("{1:0.2f}", Result.Rows[1, 3]) . """" . ",""fast"":" . """" . Format("{1:0.2f}", Result.Rows[1, 4]) . """" . "},""reviews"":" . Result.Rows[1, 8] . ",""tos_flags"":" . Result.Rows[1, 7] . "},"
+            else
+                element .=  """" . A_LoopField . """" . ":" . """" . """" . ","
+        }    
+    db.CloseDB()
+    element := SubStr(element, 1, -1)
+    sqlstr := "{" . element . "}" ; jsonify the element
+    
+    return sqlstr
+}
 
 class Uri
 {
@@ -300,11 +300,11 @@ class HttpResponse
     }
 
     SetBody(body) {
-        this.headers["Content-Length"] := StrLen(body)
+        ;Determine Content-Length header of body, -1 removes the null character
+        this.headers["Content-Length"] := StrPutVar(body, var, "UTF-8") - 1 
         this.body := body
     }
 }
-
 
 class Socket
 {
@@ -333,10 +333,9 @@ class Socket
         if (!this.data || this.data == "")
             return false
         
-        length := StrPutVar(this.data, var, "UTF-8") - 1
-        VarSetCapacity(outData, length + 1)
-        StrPut(this.data, &outData, "UTF-8")
-
+        ;length of data to send, -1 removes the null character        
+        length := StrPutVar(this.data, outData, "UTF-8") - 1
+        
         this.dataSent := 0
         loop {
             if ((i := AHKsock_Send(this.socket, &outData, length - this.dataSent)) < 0) {
@@ -364,12 +363,12 @@ class Socket
 }
 
 
-
+;Collect any winsock errors
 AHKsockErrors(iError, iSocket) {
     OutputDebug, % "Error " iError " with error code = " ErrorLevel ((iSocket <> -1) ? " on socket " iSocket "." : ".") 
 }
 
-;StrPutVar function used instead of StrLen
+;Used instead of StrLen function. Could be added to library
 StrPutVar(string, ByRef var, encoding)
 {
     ; Ensure capacity.
@@ -384,3 +383,9 @@ StrPutVar(string, ByRef var, encoding)
 #Include <AHKsock>
 
 
+
+KillHTTP:
+; Closedown all winsock sockets and exit the app
+AHKsock_Close()
+ExitApp
+Return
